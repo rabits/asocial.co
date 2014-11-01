@@ -2,3 +2,15 @@
 	path = database/lib/unqlite
 	url = ../asocial.co-database-unqlite.git
 	branch = master
+[submodule "crypto/lib/serpent"]
+        path = crypto/lib/serpent
+        url = ../asocial.co-crypto-serpent.git
+        branch = master
+[submodule "crypto/lib/micro-ecc"]
+        path = crypto/lib/micro-ecc
+        url = ../asocial.co-crypto-micro-ecc.git
+        branch = master
+[submodule "crypto/lib/libbase58"]
+        path = crypto/lib/libbase58
+        url = ../asocial.co-crypto-libbase58.git
+        branch = master
