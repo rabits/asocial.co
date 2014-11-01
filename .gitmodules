@@ -1,0 +1,4 @@
+[submodule "database/lib/unqlite"]
+	path = database/lib/unqlite
+	url = ../asocial.co-database-unqlite.git
+	branch = master
