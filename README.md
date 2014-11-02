@@ -22,3 +22,11 @@ Support:
 If you like future innovations, you can support our open-source development by a small Bitcoin donation.
 
 Bitcoin wallet: `15phQNwkVs3fXxvxzBkhuhXA2xoKikPfUy`
+
+Developing
+----------
+You need to clone this git repository recursively:
+
+```sh
+git clone --recursive https://github.com/rabits/asocial.co.git
+```
