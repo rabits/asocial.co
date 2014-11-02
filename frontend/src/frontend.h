@@ -23,6 +23,7 @@ class Frontend
 public:
     inline static Frontend* I() { if( s_pInstance == NULL ) s_pInstance = new Frontend(); return s_pInstance; }
     inline static void  destroyI() { delete s_pInstance; }
+    static void signalHandler(int signal);
 
     void init(QQmlApplicationEngine *engine, QGuiApplication *app);
     void setLocale(QString locale);

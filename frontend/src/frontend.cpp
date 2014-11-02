@@ -1,5 +1,6 @@
 #include "frontend.h"
 
+#include <signal.h>
 #include <QQmlApplicationEngine>
 #include <QScreen>
 #include <QDir>
@@ -20,20 +21,18 @@ Frontend::Frontend(QObject *parent)
 {
     qDebug("Init aSocial v%s", PROJECT_VERSION);
 
+    signal(SIGINT, Frontend::signalHandler);
+
     QCoreApplication::setOrganizationName("asocial.co");
     QCoreApplication::setOrganizationDomain("asocial.co");
     QCoreApplication::setApplicationName("asocial.co");
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
 
     // Application locale
-    if( Settings::I()->isNull("frontend/locale") )
-        Settings::I()->setting("frontend/locale", QLocale::system().name());
-
+    Settings::I()->setDefault("frontend/locale", QLocale::system().name());
     // Database name & path
-    if( Settings::I()->isNull("frontend/database_name") )
-        Settings::I()->setting("frontend/database_name", "private");
-    if( Settings::I()->isNull("frontend/database_path") )
-        Settings::I()->setting("frontend/database_path", QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+    Settings::I()->setDefault("frontend/database_name", "private.asc");
+    Settings::I()->setDefault("frontend/database_path", QStandardPaths::writableLocation(QStandardPaths::DataLocation));
 }
 
 Frontend::~Frontend()
@@ -73,4 +72,9 @@ void Frontend::setLocale(QString locale)
         m_translator.load("tr_en", ":/");
         Settings::I()->setting("frontend/locale", "en");
     }
+}
+
+void Frontend::signalHandler(int signal)
+{
+    qDebug() << "Received signal:" << signal;
 }
