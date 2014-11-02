@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+class QTimer;
+
 class Network;
 class Database;
 
@@ -16,9 +18,15 @@ public:
     ~Backend();
 
     void init();
+
+public slots:
+    void broadcast();
+
 private:
     Database *m_database;
     Network  *m_network;
+
+    QTimer   *m_broadcast_timer;
 };
 
 #endif // BACKEND_H
