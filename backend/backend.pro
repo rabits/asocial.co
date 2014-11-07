@@ -1,7 +1,8 @@
-TARGET = backend
+TARGET = ascbackend
 
 QT -= gui
 TEMPLATE = lib
+CONFIG += staticlib
 
 SOURCES += \
     src/backend.cpp
@@ -16,8 +17,3 @@ DEPENDENCY_LIBRARIES = \
     database
 
 include(../dependencies.pri)
-
-unix {
-    target.path = $${OUT_PWD}/../dist/lib
-    INSTALLS += target
-}

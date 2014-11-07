@@ -51,5 +51,5 @@ void Backend::init()
 
 void Backend::broadcast()
 {
-    m_network->sendUDP(QString("Hello from me"), Network::Hello);
+    m_network->sendBroadcast(QString("Hello from me"), Network::Hello);
 }
