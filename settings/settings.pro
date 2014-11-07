@@ -1,7 +1,8 @@
-TARGET = settings
+TARGET = ascsettings
 
 QT -= gui
 TEMPLATE = lib
+CONFIG += staticlib
 
 SOURCES += \
     src/settings.cpp
@@ -9,7 +10,3 @@ SOURCES += \
 HEADERS += \
     include/settings.h
 
-unix {
-    target.path = $${OUT_PWD}/../dist/lib
-    INSTALLS += target
-}
