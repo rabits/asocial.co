@@ -9,6 +9,7 @@
 #include "settings.h"
 #include "backend.h"
 #include "database.h"
+#include "crypto.h"
 
 Frontend* Frontend::s_pInstance = NULL;
 
@@ -45,6 +46,7 @@ Frontend::~Frontend()
 
 void Frontend::init(QQmlApplicationEngine *engine, QGuiApplication *app)
 {
+    qDebug("Init Frontend");
     m_database = new Database(Settings::I()->setting("frontend/database_name").toString(),
                               Settings::I()->setting("frontend/database_path").toString(), this);
     m_backend = new Backend(this);
@@ -62,6 +64,15 @@ void Frontend::init(QQmlApplicationEngine *engine, QGuiApplication *app)
 
     setLocale(Settings::I()->setting("frontend/locale").toString());
     m_app->installTranslator(&m_translator);
+
+    qDebug("Debug: Test gen key");
+    Crypto::I()->genKey();
+    QByteArray tmp;
+    QString orig("1C2dVScJsf35MXLWoEvMaC54MRARd32mrd");
+    Crypto::base58DecodeCheck(orig, tmp);
+    qDebug() << "Decrypt:" << (tmp == QByteArray::fromHex("0078f8429d34453fce418f0b64f745876d2de25330")) << tmp.toHex();
+    QString b58str = Crypto::base58EncodeCheck(tmp);
+    qDebug() << "Encrypt:" << (b58str == orig) << b58str;
 }
 
 void Frontend::setLocale(QString locale)

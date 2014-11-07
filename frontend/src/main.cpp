@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     qDebug("Loading qml interface");
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
-    qDebug("application init done, starting");
+    qDebug("Application init done, starting");
 
     int out = app.exec();
 

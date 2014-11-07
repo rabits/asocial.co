@@ -28,8 +28,12 @@ DEPENDENCY_LIBRARIES = \
 include(../dependencies.pri)
 
 unix {
+    CONFIG += link_pkgconfig
+    PKGCONFIG += libssl libcrypto
+
     target.path = $${OUT_PWD}/../dist
     INSTALLS += target
+
     scripts.path = $${OUT_PWD}/../dist
     scripts.files = scripts/*
     INSTALLS += scripts
