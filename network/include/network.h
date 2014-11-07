@@ -2,9 +2,12 @@
 #define NETWORK_H
 
 #include <QObject>
+#include <QMap>
 
 class QUdpSocket;
-class QTcpSocket;
+class QTcpServer;
+
+class NetDevice;
 
 class Network
     : public QObject
@@ -12,7 +15,7 @@ class Network
     Q_OBJECT
 
 public:
-    enum UDPType {
+    enum MessageType {
         Hello
     };
 
@@ -21,13 +24,22 @@ public:
 
     void init();
 
-    void sendUDP(QString str, UDPType type);
+    void sendBroadcast(QString data, MessageType type);
+
+signals:
+    void receivedBroadcast(quint8 type, QString data);
 
 private slots:
     void readUDP();
+    void processConnection();
 
 private:
+    void processData(QDataStream &stream);
+
     QUdpSocket *m_udp_socket;
+    QTcpServer *m_tcp_server;
+
+    QMap<QString, NetDevice*> m_netdevices;
 };
 
 #endif // NETWORK_H
