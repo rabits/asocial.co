@@ -7,9 +7,22 @@ Implementation
 --------------
 Is based on the bitcoin implementation of keys & addresses for profile.
 
-* Public/Private Key: ECDSA
-* Messages digest: SHA-3-256
+## Device & Profile Address (Bitcoin compliant):
+* Public/Private Key: ECDH secp256k1
+* Signature: ECDSA
+* Digest: SHA-2-256, RIPEMD-160
+* Text encode: Base58 + Check
+
+## Communication:
+* Same keys & signatures
+* Encryption: ECIES
+* Digest: SHA-3-256
 * Private key block cipher: Serpent
+
+Requirements
+------------
+* OpenSSL: libss, libcrypt
+Android procedure: http://qt-project.org/doc/qt-5/opensslsupport.html
 
 Support:
 --------
