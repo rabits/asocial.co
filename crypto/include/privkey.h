@@ -17,6 +17,8 @@ public:
     QByteArray decrypt(QString password);
 
     void setPubKey(PubKey *pubkey);
+    PubKey* getPubKey() { return m_pubkey; }
+    QByteArray getData();
 
 private:
     QByteArray m_privkey;

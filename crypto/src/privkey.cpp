@@ -10,7 +10,6 @@ PrivKey::PrivKey(QObject *parent, QByteArray privkey, bool encrypted, PubKey *pu
     , m_pubkey(pubkey)
 {
     qDebug("Create PrivKey");
-    qDebug() << m_privkey;
 }
 
 PrivKey::~PrivKey()
@@ -22,4 +21,9 @@ PrivKey::~PrivKey()
 void PrivKey::setPubKey(PubKey *pubkey)
 {
     m_pubkey = pubkey;
+}
+
+QByteArray PrivKey::getData()
+{
+    return m_privkey;
 }

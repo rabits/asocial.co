@@ -4,6 +4,7 @@
 #include <QCryptographicHash>
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
+#include <openssl/ripemd.h>
 
 #include <ctime>
 
@@ -12,6 +13,20 @@ Crypto* Crypto::s_pInstance = NULL;
 #define CRYPTO_CURVE NID_secp256k1
 #define CRYPTO_CIPHER EVP_aes_256_cbc()
 #define CRYPTO_HASHER EVP_sha256()
+
+Crypto::Crypto(QObject *parent)
+    : QObject(parent)
+    , m_group(NULL)
+{
+    qDebug("Create Crypto");
+    init();
+}
+
+Crypto::~Crypto()
+{
+    EC_GROUP_free(m_group);
+    qDebug("Destroy Crypto");
+}
 
 void Crypto::init()
 {
@@ -31,8 +46,6 @@ PrivKey* Crypto::genKey()
 {
     EC_KEY *key = NULL;
     EC_GROUP *group = NULL;
-    const EC_GROUP *group_pub = NULL;
-    const EC_POINT *point = NULL;
 
     PubKey *pubkey = NULL;
     PrivKey *privkey = NULL;
@@ -41,19 +54,17 @@ PrivKey* Crypto::genKey()
     key = EC_KEY_new();
     group = EC_GROUP_dup(m_group);
     EC_KEY_set_group(key, group);
-    EC_GROUP_free(group);
     EC_KEY_generate_key(key);
 
     // Get private key
-    privkey = new PrivKey(this, BN_bn2hex(EC_KEY_get0_private_key(key)), false, NULL);
+    privkey = new PrivKey(this, QByteArray::fromHex(BN_bn2hex(EC_KEY_get0_private_key(key))), false, NULL);
 
     // Get public key
-    point = EC_KEY_get0_public_key(key);
-    group_pub = EC_KEY_get0_group(key);
-    pubkey = new PubKey(privkey, EC_POINT_point2hex(group_pub, point, POINT_CONVERSION_COMPRESSED, NULL), true);
+    pubkey = new PubKey(privkey, QByteArray::fromHex(EC_POINT_point2hex(group, EC_KEY_get0_public_key(key), POINT_CONVERSION_COMPRESSED, NULL)), true);
 
     // Free key
     EC_KEY_free(key);
+    EC_GROUP_free(group);
 
     // Set public key
     privkey->setPubKey(pubkey);
@@ -61,27 +72,19 @@ PrivKey* Crypto::genKey()
     return privkey;
 }
 
-QByteArray Crypto::sha256enc(const QByteArray &data)
+QByteArray Crypto::ripemd160(const QByteArray &data)
+{
+    return QByteArray(reinterpret_cast<char*>(RIPEMD160(reinterpret_cast<const uchar*>(data.constData()), data.size(), NULL)));
+}
+
+QByteArray Crypto::sha256(const QByteArray &data)
 {
     return QCryptographicHash::hash(data, QCryptographicHash::Sha256);
 }
 
-QByteArray Crypto::sha3256enc(const QByteArray &data)
+QByteArray Crypto::sha3256(const QByteArray &data)
 {
     return QCryptographicHash::hash(data, QCryptographicHash::Sha3_256);
-}
-
-Crypto::Crypto(QObject *parent)
-    : QObject(parent)
-{
-    qDebug("Create Crypto");
-    init();
-}
-
-Crypto::~Crypto()
-{
-    EC_GROUP_free(m_group);
-    qDebug("Destroy Crypto");
 }
 
 
@@ -158,7 +161,7 @@ bool Crypto::base58DecodeCheck(const QString &b58str, QByteArray &data)
     }
 
     // re-calculate the checksum, insure it matches the included 4-byte checksum
-    QByteArray hash = sha256enc(sha256enc(data.left(data.size()-4)));
+    QByteArray hash = sha256(sha256(data.left(data.size()-4)));
     if( hash.left(4) != data.right(4) ) {
         qDebug() << "Hash of data and predefined hash not match" << hash.left(4).toHex() << data.right(4).toHex();
         data.clear();
@@ -209,7 +212,7 @@ QString Crypto::base58EncodeCheck(const QByteArray &data)
 {
     // Add 4-byte hash check to the end of data
     QByteArray process(data);
-    QByteArray hash = sha256enc(sha256enc(data));
+    QByteArray hash = sha256(sha256(data));
     process.append(hash.left(4));
 
     return base58Encode(process);

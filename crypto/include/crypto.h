@@ -21,13 +21,14 @@ public:
 
     PrivKey* genKey();
 
-    static bool base58Decode(const QString& b58str, QByteArray& data);
-    static bool base58DecodeCheck(const QString& b58str, QByteArray& data);
-    static QString base58Encode(const QByteArray& data);
-    static QString base58EncodeCheck(const QByteArray& data);
+    static bool base58Decode(const QString &b58str, QByteArray &data);
+    static bool base58DecodeCheck(const QString &b58str, QByteArray &data);
+    static QString base58Encode(const QByteArray &data);
+    static QString base58EncodeCheck(const QByteArray &data);
 
-    static inline QByteArray sha256enc(const QByteArray &data); // Used to generate address of profile or device
-    static inline QByteArray sha3256enc(const QByteArray &data); // Used in messages digest
+    static QByteArray ripemd160(const QByteArray &data);
+    static inline QByteArray sha256(const QByteArray &data);
+    static inline QByteArray sha3256(const QByteArray &data);
 
 private:
     explicit Crypto(QObject *parent = 0);
