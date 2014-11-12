@@ -1,5 +1,7 @@
 #include "frontend.h"
 
+#define FRONTEND_DATABASE_VERSION 0x0001
+
 #include <signal.h>
 #include <QQmlApplicationEngine>
 #include <QScreen>
@@ -8,8 +10,8 @@
 
 #include "settings.h"
 #include "backend.h"
-#include "database.h"
 #include "crypto.h"
+#include "sqldatabase.h"
 
 Frontend* Frontend::s_pInstance = NULL;
 
@@ -17,7 +19,6 @@ Frontend::Frontend(QObject *parent)
     : QObject(parent)
     , m_translator()
     , m_app(NULL)
-    , m_database(NULL)
     , m_backend(NULL)
 {
     qDebug("Init aSocial v%s", PROJECT_VERSION);
@@ -47,8 +48,16 @@ Frontend::~Frontend()
 void Frontend::init(QQmlApplicationEngine *engine, QGuiApplication *app)
 {
     qDebug("Init Frontend");
-    m_database = new Database(Settings::I()->setting("frontend/database_name").toString(),
-                              Settings::I()->setting("frontend/database_path").toString(), this);
+
+    m_database = new SqlDatabase(this, Settings::I()->setting("frontend/database_name").toString(),
+                                 Settings::I()->setting("frontend/database_path").toString());
+    m_database->open("asdasd");
+
+    m_database->table("database", QStringList()
+          << "id int primary key not null"
+          << "version int not null"
+          << "encrypted bool not null");
+
     m_backend = new Backend(this);
     m_backend->init();
 
@@ -66,13 +75,12 @@ void Frontend::init(QQmlApplicationEngine *engine, QGuiApplication *app)
     m_app->installTranslator(&m_translator);
 
     qDebug("Debug: Test gen key");
-    Crypto::I()->genKey();
-    QByteArray tmp;
-    QString orig("1C2dVScJsf35MXLWoEvMaC54MRARd32mrd");
-    Crypto::base58DecodeCheck(orig, tmp);
-    qDebug() << "Decrypt:" << (tmp == QByteArray::fromHex("0078f8429d34453fce418f0b64f745876d2de25330")) << tmp.toHex();
-    QString b58str = Crypto::base58EncodeCheck(tmp);
-    qDebug() << "Encrypt:" << (b58str == orig) << b58str;
+    PrivKey *key = Crypto::I()->genKey();
+    qDebug() << "PrivKey:" << Crypto::base58Encode(key->getData());
+    qDebug() << "PrivKey:" << key->getData().toHex();
+    qDebug() << "PubKey:" << Crypto::base58Encode(key->getPubKey()->getData());
+    qDebug() << "PubKey:" << key->getPubKey()->getData().toHex();
+    qDebug() << "Address:" << key->getPubKey()->getAddress();
 }
 
 void Frontend::setLocale(QString locale)

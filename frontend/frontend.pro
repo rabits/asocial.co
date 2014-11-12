@@ -1,6 +1,6 @@
 TARGET = asocial.bin
 
-QT += qml quick
+QT += qml quick sql
 TEMPLATE = app
 
 # Default rules for deployment
