@@ -5,7 +5,7 @@
 
 #include "settings.h"
 #include "network.h"
-#include "database.h"
+#include "nosqldatabase.h"
 
 Backend::Backend(QObject *parent)
     : QObject(parent)
@@ -35,8 +35,10 @@ Backend::~Backend()
 void Backend::init()
 {
     qDebug("Init Backend");
-    m_database = new Database(Settings::I()->setting("backend/database_name").toString(),
-                              Settings::I()->setting("backend/database_path").toString(), this);
+    m_database = new NoSqlDatabase(this, Settings::I()->setting("backend/database_name").toString(),
+                              Settings::I()->setting("backend/database_path").toString());
+    m_database->open();
+
     m_network = new Network(this);
     m_network->init();
 

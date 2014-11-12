@@ -6,7 +6,7 @@
 class QTimer;
 
 class Network;
-class Database;
+class NoSqlDatabase;
 
 class Backend
     : public QObject
@@ -23,7 +23,7 @@ public slots:
     void broadcast();
 
 private:
-    Database *m_database;
+    NoSqlDatabase *m_database;
     Network  *m_network;
 
     QTimer   *m_broadcast_timer;
