@@ -1,4 +1,4 @@
-[submodule "database/lib/unqlite"]
-	path = database/lib/unqlite
-	url = ../asocial.co-database-unqlite.git
+[submodule "database/lib/leveldb"]
+	path = database/lib/leveldb
+	url = ../asocial.co-database-leveldb.git
 	branch = master

@@ -3,9 +3,10 @@ aSocial Database module
 
 Database is used to store any information. Backend & Frontend uses 2 databases - public & private.
 
-Engine
-------
-I chose unQLite to store data because I like json documents and, as I think - it is the best choice for a social applications.
+Engines
+-------
+* Public backend: leveldb
+* Private frontend: sqlcipher (based on sqlite with transparent encryption)
 
 Support:
 --------
