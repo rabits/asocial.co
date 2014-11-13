@@ -1,6 +1,6 @@
 #include "frontend.h"
 
-#define FRONTEND_DATABASE_VERSION 0x0001
+#include "fedatabase.h"
 
 #include <signal.h>
 #include <QQmlApplicationEngine>
@@ -9,9 +9,8 @@
 #include <QStandardPaths>
 
 #include "settings.h"
-#include "backend.h"
-#include "crypto.h"
-#include "sqldatabase.h"
+#include "backend/backend.h"
+#include "crypto/crypto.h"
 
 Frontend* Frontend::s_pInstance = NULL;
 
@@ -49,14 +48,9 @@ void Frontend::init(QQmlApplicationEngine *engine, QGuiApplication *app)
 {
     qDebug("Init Frontend");
 
-    m_database = new SqlDatabase(this, Settings::I()->setting("frontend/database_name").toString(),
-                                 Settings::I()->setting("frontend/database_path").toString());
+    m_database = new FEDatabase(this, Settings::I()->setting("frontend/database_name").toString(),
+                                      Settings::I()->setting("frontend/database_path").toString());
     m_database->open("asdasd");
-
-    m_database->table("database", QStringList()
-          << "id int primary key not null"
-          << "version int not null"
-          << "encrypted bool not null");
 
     m_backend = new Backend(this);
     m_backend->init();

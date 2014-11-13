@@ -13,7 +13,7 @@
 #include <QQmlApplicationEngine>
 
 class Backend;
-class SqlDatabase;
+class FEDatabase;
 
 class Frontend
     : public QObject
@@ -39,7 +39,7 @@ private:
     QQmlContext     *m_context;
 
     Backend         *m_backend;
-    SqlDatabase     *m_database;
+    FEDatabase      *m_database;
 
 public slots:
 

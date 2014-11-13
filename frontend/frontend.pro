@@ -8,12 +8,14 @@ include(deployment.pri)
 
 SOURCES += \
     src/main.cpp \
-    src/frontend.cpp
+    src/frontend.cpp \
+    src/fedatabase.cpp
 
 RESOURCES += qml.qrc
 
 HEADERS += \
-    src/frontend.h
+    src/frontend.h \
+    src/fedatabase.h
 
 OTHER_FILES += \
     scripts/asocial
