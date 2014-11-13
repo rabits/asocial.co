@@ -5,11 +5,11 @@ QT += network
 TEMPLATE = lib
 CONFIG += staticlib
 
+HEADERS += \
+    include/network/network.h \
+    include/network/netdevice.h
+
 SOURCES += \
     src/network.cpp \
     src/netdevice.cpp
-
-HEADERS += \
-    include/network.h \
-    include/netdevice.h
 

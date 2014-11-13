@@ -1,4 +1,4 @@
-#include "netdevice.h"
+#include "network/netdevice.h"
 
 #include <QDebug>
 #include <QTcpSocket>

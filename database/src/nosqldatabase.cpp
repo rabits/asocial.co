@@ -1,9 +1,4 @@
-#include "nosqldatabase.h"
-
-// Version
-#define DATABASE_VERSION 0x0001
-// Backward-compatibility with all versions greater than
-#define DATABASE_MINIMAL_VERSION 0x0001
+#include "database/nosqldatabase.h"
 
 #include <QDebug>
 #include <QDir>
@@ -41,14 +36,16 @@ void NoSqlDatabase::open()
 
     leveldb::Options options;
     options.create_if_missing = true;
-    options.compression = leveldb::kNoCompression;
     if( ! leveldb::DB::Open(options, db_path.toUtf8().constData(), &m_db).ok() ) {
         qWarning() << "Unable to open database" << db_path;
         return;
     }
+}
 
-    // Check database version
-    qDebug() << "Database version:" << fetchStore("database_version", QByteArray::number(DATABASE_VERSION)).toLong();
+void NoSqlDatabase::close()
+{
+    qDebug() << "Close NoSQL DB:" << m_name;
+    delete m_db;
 }
 
 QByteArray NoSqlDatabase::fetchStore(const QString &key, const QByteArray &val)
@@ -67,4 +64,31 @@ void NoSqlDatabase::store(const QString &key, const QByteArray &val)
 {
     std::string value(val.constData());
     m_db->Put(leveldb::WriteOptions(), key.toStdString(), value);
+}
+
+void NoSqlDatabase::backup()
+{
+    qDebug("Starting NoSqlDatabase backup");
+
+    close();
+
+    QString backup_from = m_path + "/" + m_name;
+    QDir backup_name(m_path + "/backup_" + m_name);
+
+    // Remove previous backup
+    if( backup_name.exists() )
+        backup_name.remove(".");
+
+    backup_name.mkpath(".");
+    QStringList files = QDir(backup_from).entryList(QDir::Files);
+    foreach( const QString &file, files ) {
+        if( ! QFile::copy(backup_from + "/" + file, backup_name.path() + "/" + file) ) {
+            backup_name.remove(".");
+            qFatal("Unable to create backup of the database");
+        }
+    }
+
+    qDebug("Database backup done");
+
+    open();
 }

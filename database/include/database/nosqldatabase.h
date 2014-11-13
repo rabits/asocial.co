@@ -17,8 +17,11 @@ public:
     ~NoSqlDatabase();
 
     void open();
+    void close();
     QByteArray fetchStore(const QString &key, const QByteArray &val = "");
     void store(const QString &key, const QByteArray &val = "");
+
+    void backup(); // Database backup
 
 private:
     QString m_name;

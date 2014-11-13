@@ -1,8 +1,8 @@
-#include "pubkey.h"
+#include "crypto/pubkey.h"
 
 #include <QDebug>
 
-#include "crypto.h"
+#include "crypto/crypto.h"
 
 PubKey::PubKey(QObject *parent, QByteArray pub_key, bool compressed)
     : QObject(parent)

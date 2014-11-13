@@ -5,10 +5,12 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 SOURCES += \
-    src/backend.cpp
+    src/backend.cpp \
+    src/bedatabase.cpp
 
 HEADERS += \
-    include/backend.h
+    include/backend/backend.h \
+    src/bedatabase.h
 
 DEPENDENCY_LIBRARIES = \
     settings \

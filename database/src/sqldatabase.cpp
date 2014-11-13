@@ -1,9 +1,4 @@
-#include "sqldatabase.h"
-
-// Version
-#define DATABASE_VERSION 0x0001
-// Backward-compatibility with all versions greater than
-#define DATABASE_MINIMAL_VERSION 0x0001
+#include "database/sqldatabase.h"
 
 #include <QDebug>
 #include <QDir>
@@ -49,18 +44,39 @@ void SqlDatabase::open(const QString &password)
         qCritical() << m_db.lastError();
         qFatal("Unable to open sql database");
     }
-
-    // Check database version
-    //qDebug() << "Database version:" << fetchStore("database_version", QByteArray::number(DATABASE_VERSION)).toLong();
-
 }
 
 void SqlDatabase::table(const QString &name, const QStringList &fields)
 {
     qDebug() << "Table query:" << name;
     QSqlQuery query(m_db);
-    query.prepare(QString("CREATE TABLE IF NOT EXISTS %1 (%2)").arg(m_db.driver()->escapeIdentifier(name, QSqlDriver::TableName), fields.join(',')));
 
-    if( ! query.exec() )
+    if( ! query.exec(QString("CREATE TABLE IF NOT EXISTS %1 (%2)").arg(m_db.driver()->escapeIdentifier(name, QSqlDriver::TableName), fields.join(','))) )
         qCritical() << m_db.lastError();
+}
+
+void SqlDatabase::backup()
+{
+    qDebug("Starting SqlDatabase backup");
+
+    m_db.close();
+
+    QString backup_name = m_path + "/backup_" + m_name;
+
+    // Remove previous backup
+    if( QFile::exists(backup_name) )
+        QFile::remove(backup_name);
+
+    // Copy current database to backup
+    if( ! QFile::copy(m_path + "/" + m_name, backup_name) ) {
+        QFile::remove(backup_name);
+        qFatal("Unable to create backup of the database");
+    }
+
+    qDebug("Database backup done");
+
+    if( ! m_db.open() ) {
+        qCritical() << m_db.lastError();
+        qFatal("Unable to open sql database");
+    }
 }

@@ -1,4 +1,4 @@
-#include "network.h"
+#include "network/network.h"
 
 // Version of protocol
 #define NETWORK_PROTOCOL_VERSION 0x0001
@@ -11,7 +11,7 @@
 #include <QTcpServer>
 
 #include "settings.h"
-#include "netdevice.h"
+#include "network/netdevice.h"
 
 Network::Network(QObject *parent)
     : QObject(parent)

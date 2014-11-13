@@ -1,11 +1,12 @@
-#include "backend.h"
+#include "backend/backend.h"
+
+#include "bedatabase.h"
 
 #include <QStandardPaths>
 #include <QTimer>
 
 #include "settings.h"
-#include "network.h"
-#include "nosqldatabase.h"
+#include "network/network.h"
 
 Backend::Backend(QObject *parent)
     : QObject(parent)
@@ -35,8 +36,8 @@ Backend::~Backend()
 void Backend::init()
 {
     qDebug("Init Backend");
-    m_database = new NoSqlDatabase(this, Settings::I()->setting("backend/database_name").toString(),
-                              Settings::I()->setting("backend/database_path").toString());
+    m_database = new BEDatabase(this, Settings::I()->setting("backend/database_name").toString(),
+                                      Settings::I()->setting("backend/database_path").toString());
     m_database->open();
 
     m_network = new Network(this);

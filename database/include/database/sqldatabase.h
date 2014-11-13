@@ -16,7 +16,9 @@ public:
     void open(const QString &password = "");
     void table(const QString &name, const QStringList &fields);
 
-private:
+    void backup(); // Database backup
+
+protected:
     QString m_name;
     QString m_path;
 

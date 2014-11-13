@@ -1,4 +1,4 @@
-#include "privkey.h"
+#include "crypto/privkey.h"
 
 #include <QDebug>
 #include <QDataStream>
