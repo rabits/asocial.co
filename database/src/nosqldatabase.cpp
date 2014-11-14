@@ -22,8 +22,10 @@ NoSqlDatabase::~NoSqlDatabase()
 
 void NoSqlDatabase::open()
 {
-    if( m_db != NULL )
+    if( m_db != NULL ) {
+        qWarning() << "Database" << m_name << "is already open";
         return;
+    }
 
     if( m_path.isEmpty() || m_name.isEmpty() ) {
         qCritical() << "Unable to open DB with empty path or file:" << m_path << m_name;
@@ -46,6 +48,7 @@ void NoSqlDatabase::close()
 {
     qDebug() << "Close NoSQL DB:" << m_name;
     delete m_db;
+    m_db = NULL;
 }
 
 QByteArray NoSqlDatabase::fetchStore(const QString &key, const QByteArray &val)
@@ -62,22 +65,22 @@ QByteArray NoSqlDatabase::fetchStore(const QString &key, const QByteArray &val)
 
 void NoSqlDatabase::store(const QString &key, const QByteArray &val)
 {
-    std::string value(val.constData());
+    std::string value(val.constData(), val.length());
     m_db->Put(leveldb::WriteOptions(), key.toStdString(), value);
 }
 
 void NoSqlDatabase::backup()
 {
-    qDebug("Starting NoSqlDatabase backup");
-
     close();
+
+    qDebug("Starting NoSqlDatabase backup");
 
     QString backup_from = m_path + "/" + m_name;
     QDir backup_name(m_path + "/backup_" + m_name);
 
     // Remove previous backup
     if( backup_name.exists() )
-        backup_name.remove(".");
+        backup_name.removeRecursively();
 
     backup_name.mkpath(".");
     QStringList files = QDir(backup_from).entryList(QDir::Files);

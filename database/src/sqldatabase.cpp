@@ -57,9 +57,10 @@ void SqlDatabase::table(const QString &name, const QStringList &fields)
 
 void SqlDatabase::backup()
 {
-    qDebug("Starting SqlDatabase backup");
-
+    qDebug() << "Close database" << m_name;
     m_db.close();
+
+    qDebug("Starting SqlDatabase backup");
 
     QString backup_name = m_path + "/backup_" + m_name;
 
@@ -74,6 +75,8 @@ void SqlDatabase::backup()
     }
 
     qDebug("Database backup done");
+
+    qDebug() << "Reopen database" << m_name;
 
     if( ! m_db.open() ) {
         qCritical() << m_db.lastError();
