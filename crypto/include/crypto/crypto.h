@@ -26,6 +26,9 @@ public:
     static QString base58Encode(const QByteArray &data);
     static QString base58EncodeCheck(const QByteArray &data);
 
+    static QByteArray passwordEncrypt(const QString &password, const QByteArray &data);
+    static QByteArray passwordDecrypt(const QString &password, const QByteArray &encrypted_data);
+
     static QByteArray ripemd160(const QByteArray &data);
     static inline QByteArray sha256(const QByteArray &data);
     static inline QByteArray sha3256(const QByteArray &data);

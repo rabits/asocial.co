@@ -5,8 +5,9 @@
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
 #include <openssl/ripemd.h>
-
 #include <ctime>
+
+#include "lib/simpleqtcryptor/simpleqtcryptor.h"
 
 Crypto* Crypto::s_pInstance = NULL;
 
@@ -70,6 +71,28 @@ PrivKey* Crypto::genKey()
     privkey->setPubKey(pubkey);
 
     return privkey;
+}
+
+QByteArray Crypto::passwordEncrypt(const QString &password, const QByteArray &data)
+{
+    QByteArray encrypted_data;
+    QSharedPointer<SimpleQtCryptor::Key> key(new SimpleQtCryptor::Key(password));
+    SimpleQtCryptor::Encryptor e(key, SimpleQtCryptor::SERPENT_32, SimpleQtCryptor::ModeCFB, SimpleQtCryptor::NoChecksum);
+
+    if( ! e.encrypt(data, encrypted_data, true) )
+        qFatal("Unable to encrypt data with password");
+    return encrypted_data;
+}
+
+QByteArray Crypto::passwordDecrypt(const QString &password, const QByteArray &encrypted_data)
+{
+    QByteArray data;
+    QSharedPointer<SimpleQtCryptor::Key> key(new SimpleQtCryptor::Key(password));
+    SimpleQtCryptor::Decryptor d(key, SimpleQtCryptor::SERPENT_32, SimpleQtCryptor::ModeCFB);
+
+    if( ! d.decrypt(encrypted_data, data, true) )
+        qFatal("Unable to decrypt data with password");
+    return data;
 }
 
 QByteArray Crypto::ripemd160(const QByteArray &data)

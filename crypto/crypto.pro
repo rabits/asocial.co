@@ -14,6 +14,8 @@ SOURCES += \
     src/privkey.cpp \
     src/pubkey.cpp
 
+include(lib/simpleqtcryptor/simpleqtcryptor.pri)
+
 unix {
     CONFIG += link_pkgconfig
     PKGCONFIG += libssl libcrypto
