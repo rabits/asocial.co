@@ -14,6 +14,7 @@ FEDatabase::FEDatabase(QObject *parent, QString name, QString path)
     : SqlDatabase(parent, name, path)
     , m_version(-1)
 {
+    qDebug() << "Creating FE Database" << name;
 }
 
 void FEDatabase::open(const QString &password)

@@ -14,16 +14,16 @@ SOURCES += \
 RESOURCES += qml.qrc
 
 HEADERS += \
-    src/frontend.h \
+    include/frontend/frontend.h \
     src/fedatabase.h
 
 OTHER_FILES += \
     scripts/asocial
 
 DEPENDENCY_LIBRARIES = \
+    backend \
     settings \
     crypto \
-    backend \
     database \
     network
 

@@ -6,15 +6,18 @@ Window {
     width: 360
     height: 360
 
-    MouseArea {
-        anchors.fill: parent
-        onClicked: {
-            Qt.quit();
-        }
-    }
-
     Text {
         text: qsTr("Hello World")
         anchors.centerIn: parent
+    }
+
+    Component.onCompleted: {
+        console.log("Connecting listener of password requests")
+        app.requestPassword.connect(password_request.show)
+        password_request.done.connect(app.responsePassword)
+    }
+
+    PasswordRequest {
+        id: password_request
     }
 }
