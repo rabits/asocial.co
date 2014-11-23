@@ -7,10 +7,13 @@
 
 #include <QDebug>
 
+#include "crypto/crypto.h"
+
 BEDatabase::BEDatabase(QObject *parent, const QString &name, const QString &path)
     : NoSqlDatabase(parent, name, path)
     , m_version(-1)
 {
+    qDebug() << "Creating BE Database" << name;
 }
 
 void BEDatabase::open()
@@ -55,6 +58,29 @@ void BEDatabase::setVersion(const long version)
     store("database_version", QByteArray::number((qlonglong)version));
 
     m_version = version;
+}
+
+PrivKey *BEDatabase::getDeviceKey()
+{
+    QByteArray privkey;
+    QByteArray encrypted;
+    QByteArray pubkey;
+
+    if( ! (fetch("device_privkey", privkey) && fetch("device_privkey_encrypted", encrypted) && fetch("device_pubkey", pubkey)) )
+        return NULL;
+
+    return new PrivKey(this, privkey, (bool)(*encrypted.constData()), new PubKey(this, pubkey, true));
+}
+
+void BEDatabase::storeDeviceKey(const PrivKey *key)
+{
+    if( ! key ) {
+        qCritical("Unable to store null private key");
+        return;
+    }
+    store("device_privkey", key->getData());
+    store("device_privkey_encrypted", QByteArray(1, (char)key->isEncrypted()));
+    store("device_pubkey", key->getPubKey()->getData());
 }
 
 void BEDatabase::upgrade(const long from_version)

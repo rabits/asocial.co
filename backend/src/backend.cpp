@@ -7,6 +7,7 @@
 
 #include "settings.h"
 #include "network/network.h"
+#include "crypto/crypto.h"
 
 Backend::Backend(QObject *parent)
     : QObject(parent)
@@ -33,12 +34,50 @@ Backend::~Backend()
     qDebug("Destroy Backend");
 }
 
-void Backend::init()
+void Backend::init(const PrivKey *device_passkey)
 {
     qDebug("Init Backend");
+
+    initDatabase();
+
+    initDeviceKey(device_passkey);
+
+    initNetwork();
+}
+
+void Backend::initDatabase()
+{
+    qDebug("Init Backend Database");
+
     m_database = new BEDatabase(this, Settings::I()->setting("backend/database_name").toString(),
                                       Settings::I()->setting("backend/database_path").toString());
     m_database->open();
+}
+
+void Backend::initDeviceKey(const PrivKey *device_passkey)
+{
+    qDebug("Init Backend Device key");
+
+    m_device_key = m_database->getDeviceKey();
+
+    if( m_device_key == NULL ) {
+        qDebug("Generate new Device key");
+        m_device_key = Crypto::I()->genKey();
+
+        m_device_key->encrypt(QString(Crypto::sha3256(device_passkey->getData()).toHex()));
+
+        m_database->storeDeviceKey(m_device_key);
+        m_device_key = m_database->getDeviceKey();
+    }
+
+    if( m_device_key->isEncrypted() ) {
+        m_device_key->decryptForever(QString(Crypto::sha3256(device_passkey->getData()).toHex()));
+    }
+}
+
+void Backend::initNetwork()
+{
+    qDebug("Init Backend Networking");
 
     m_network = new Network(this);
     m_network->init();

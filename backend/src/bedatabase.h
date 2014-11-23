@@ -3,6 +3,8 @@
 
 #include "database/nosqldatabase.h"
 
+class PrivKey;
+
 class BEDatabase
     : public NoSqlDatabase
 {
@@ -14,6 +16,9 @@ public:
     void open();
     long version();
     void setVersion(const long version);
+
+    PrivKey* getDeviceKey();
+    void storeDeviceKey(const PrivKey *key);
 
     void upgrade(const long from_version);
 
