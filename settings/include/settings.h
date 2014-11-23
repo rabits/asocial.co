@@ -10,7 +10,7 @@ class Settings
 
 public:
     inline static Settings* I() { if( s_pInstance == NULL ) s_pInstance = new Settings(); return s_pInstance; }
-    inline static void  destroyI() { delete s_pInstance; }
+    inline static void destroyI() { delete s_pInstance; }
 
     inline static void setConfigFile(QString &path) { s_pInstance = new Settings(path); }
 
