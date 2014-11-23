@@ -51,20 +51,33 @@ void NoSqlDatabase::close()
     m_db = NULL;
 }
 
-QByteArray NoSqlDatabase::fetchStore(const QString &key, const QByteArray &val)
+bool NoSqlDatabase::fetch(const QString &key, QByteArray &data)
 {
-    qDebug("Fetching with store data");
-    ::std::string value(val.constData());
+    qDebug() << "Fetching data" << key;
+    ::std::string value;
     if( ! m_db->Get(leveldb::ReadOptions(), key.toStdString(), &value).ok() ) {
-        qDebug() << "Unable to get value" << key;
-        store(key, val);
+        qDebug() << "Data not found" << key;
+        return false;
     }
 
-    return QByteArray::fromRawData(value.c_str(), value.size());
+    data.setRawData(value.c_str(), value.size());
+    data.detach();
+    return true;
+}
+
+QByteArray NoSqlDatabase::fetchStore(const QString &key, const QByteArray &val)
+{
+    qDebug() << "Fetching with store data" << key;
+    QByteArray data;
+    if( ! fetch(key, data) )
+        store(key, val);
+
+    return data;
 }
 
 void NoSqlDatabase::store(const QString &key, const QByteArray &val)
 {
+    qDebug() << "Store data" << key;
     std::string value(val.constData(), val.length());
     m_db->Put(leveldb::WriteOptions(), key.toStdString(), value);
 }

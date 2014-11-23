@@ -5,8 +5,12 @@ Database is used to store any information. Backend & Frontend uses 2 databases -
 
 Engines
 -------
-* Public backend: leveldb
-* Private frontend: sqlcipher (based on sqlite with transparent encryption)
+
+### NoSQL database
+[LevelDB](http://en.wikipedia.org/wiki/LevelDB) - high-speed key-value storage
+
+### SQL database
+[SQLCipher](https://www.zetetic.net/sqlcipher/) - based on sqlite with transparent AES-256 CBR encryption
 
 Support:
 --------

@@ -18,6 +18,7 @@ public:
 
     void open();
     void close();
+    bool fetch(const QString &key, QByteArray &data);
     QByteArray fetchStore(const QString &key, const QByteArray &val = "");
     void store(const QString &key, const QByteArray &val = "");
 
