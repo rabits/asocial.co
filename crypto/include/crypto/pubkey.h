@@ -9,11 +9,11 @@ class PubKey
     Q_OBJECT
 
 public:
-    explicit PubKey(QObject *parent = 0, QByteArray pub_key = "", bool compressed = true);
+    explicit PubKey(QObject *parent = 0, const QByteArray &pub_key = "", bool compressed = true);
     ~PubKey();
 
-    QString getAddress();
-    QByteArray getData();
+    const QString getAddress();
+    const QByteArray getData() const;
 
 private:
     QByteArray m_pubkey;

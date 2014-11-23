@@ -79,20 +79,21 @@ QByteArray Crypto::passwordEncrypt(const QString &password, const QByteArray &da
     QSharedPointer<SimpleQtCryptor::Key> key(new SimpleQtCryptor::Key(password));
     SimpleQtCryptor::Encryptor e(key, SimpleQtCryptor::SERPENT_32, SimpleQtCryptor::ModeCFB, SimpleQtCryptor::NoChecksum);
 
-    if( ! e.encrypt(data, encrypted_data, true) )
+    if( e.encrypt(data, encrypted_data, true) != SimpleQtCryptor::NoError )
         qFatal("Unable to encrypt data with password");
     return encrypted_data;
 }
 
-QByteArray Crypto::passwordDecrypt(const QString &password, const QByteArray &encrypted_data)
+bool Crypto::passwordDecrypt(const QString &password, const QByteArray &encrypted_data, QByteArray &decrypted_data)
 {
-    QByteArray data;
     QSharedPointer<SimpleQtCryptor::Key> key(new SimpleQtCryptor::Key(password));
     SimpleQtCryptor::Decryptor d(key, SimpleQtCryptor::SERPENT_32, SimpleQtCryptor::ModeCFB);
 
-    if( ! d.decrypt(encrypted_data, data, true) )
-        qFatal("Unable to decrypt data with password");
-    return data;
+    if( d.decrypt(encrypted_data, decrypted_data, true) != SimpleQtCryptor::NoError ) {
+        qWarning("Unable to decrypt data with password");
+        return false;
+    }
+    return true;
 }
 
 QByteArray Crypto::ripemd160(const QByteArray &data)

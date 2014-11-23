@@ -4,7 +4,7 @@
 
 #include "crypto/crypto.h"
 
-PubKey::PubKey(QObject *parent, QByteArray pub_key, bool compressed)
+PubKey::PubKey(QObject *parent, const QByteArray &pub_key, bool compressed)
     : QObject(parent)
     , m_pubkey(pub_key)
     , m_compressed(compressed)
@@ -18,7 +18,7 @@ PubKey::~PubKey()
     qDebug("Destroy PubKey");
 }
 
-QString PubKey::getAddress()
+const QString PubKey::getAddress()
 {
     if( m_address.isEmpty() ) {
         // Get hashes and prepend 0x00 as main bitcoin network ident and encode with Base58Check
@@ -28,7 +28,7 @@ QString PubKey::getAddress()
     return m_address;
 }
 
-QByteArray PubKey::getData()
+const QByteArray PubKey::getData() const
 {
     return m_pubkey;
 }
