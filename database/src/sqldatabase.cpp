@@ -36,7 +36,7 @@ void SqlDatabase::open(const QString &password)
     QString db_path = m_path + "/" + m_name;
     qDebug() << "Open SQL DB:" << db_path;
 
-    m_db = QSqlDatabase::addDatabase(new QSQLCipherDriver(), "frontend");
+    m_db = QSqlDatabase::addDatabase(new QSQLCipherDriver(), db_path);
     m_db.setDatabaseName(db_path);
     m_db.setPassword(password);
 
@@ -52,7 +52,7 @@ void SqlDatabase::table(const QString &name, const QStringList &fields)
     QSqlQuery query(m_db);
 
     if( ! query.exec(QString("CREATE TABLE IF NOT EXISTS %1 (%2)").arg(m_db.driver()->escapeIdentifier(name, QSqlDriver::TableName), fields.join(','))) )
-        qCritical() << m_db.lastError();
+        qCritical() << query.lastError();
 }
 
 void SqlDatabase::backup()

@@ -139,7 +139,7 @@ private:
 class QSQLCipherDriverPrivate : public QSqlDriverPrivate
 {
 public:
-    inline QSQLCipherDriverPrivate() : QSqlDriverPrivate(), access(0) { dbmsType = SQLite; }
+    inline QSQLCipherDriverPrivate() : QSqlDriverPrivate(), access(0) { dbmsType = QSqlDriver::SQLite; }
     sqlite3 *access;
     QList <QSQLCipherResult *> results;
 };
@@ -597,7 +597,6 @@ bool QSQLCipherDriver::open(const QString & db, const QString &, const QString &
     if (isOpen())
         close();
 
-
     int timeOut = 5000;
     bool sharedCache = false;
     bool openReadOnlyOption = false;
@@ -628,8 +627,7 @@ bool QSQLCipherDriver::open(const QString & db, const QString &, const QString &
     if (sqlite3_open_v2(db.toUtf8().constData(), &d->access, openMode, NULL) == SQLITE_OK) {
         sqlite3_busy_timeout(d->access, timeOut);
         // Check password
-        if (sqlite3_key(d->access, password.toUtf8().constData(), password.toUtf8().size()) == SQLITE_OK &&
-                sqlite3_exec(d->access, "PRAGMA integrity_check", NULL, NULL, NULL) == SQLITE_OK) {
+        if (decryptDatabase(password)) {
             setOpen(true);
             setOpenError(false);
             return true;
@@ -648,6 +646,15 @@ bool QSQLCipherDriver::open(const QString & db, const QString &, const QString &
         d->access = 0;
     }
     return false;
+}
+
+bool QSQLCipherDriver::decryptDatabase(const QString &password, const QString &db_name)
+{
+    Q_D(QSQLCipherDriver);
+    QString check_request = db_name.isEmpty() ? "PRAGMA integrity_check" : QString("PRAGMA %1.integrity_check").arg(db_name);
+
+    return sqlite3_key_v2(d->access, db_name.toUtf8().constData(), password.toUtf8().constData(), password.toUtf8().size()) == SQLITE_OK &&
+            sqlite3_exec(d->access, check_request.toUtf8().constData(), NULL, NULL, NULL) == SQLITE_OK;
 }
 
 void QSQLCipherDriver::close()

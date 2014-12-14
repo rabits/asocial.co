@@ -85,6 +85,7 @@ public:
                    const QString & host,
                    int port,
                    const QString & connOpts);
+    bool decryptDatabase(const QString &password, const QString &db_name = "main");
     void close();
     QSqlResult *createResult() const;
     bool beginTransaction();
