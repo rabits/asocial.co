@@ -17,6 +17,9 @@ public:
     // Returns current encrypted state
     inline bool isEncrypted() const { return m_encrypted; }
 
+    // Check privkey data
+    inline bool isValid() const { return m_privkey.size() > 0; }
+
     // Encrypt private key and set encrypted state
     void encrypt(const QString &password);
 
