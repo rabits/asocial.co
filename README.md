@@ -29,7 +29,7 @@ Edit your history - any information is tied to a datetime region that you can ed
 Also, you can freely travel through your or any known line of line.
 
 ### Overlays
-Allows you to edit someone else's data - your changes will be attached and overlap the original data.
+Allows you to edit data of anyone - your changes will be attached and overlap the original data.
 
 ### Bitcoin wallet
 You profile ID & device ID is a bitcoin address, so you can send or receive money using this addresses.
