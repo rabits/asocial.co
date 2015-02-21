@@ -2,6 +2,8 @@
 #define FRONTEND_H
 
 #include <QObject>
+#include <QJsonObject>
+#include <QJsonArray>
 
 class QGuiApplication;
 class QQmlApplicationEngine;
@@ -11,6 +13,7 @@ class QQmlContext;
 class PrivKey;
 class Backend;
 class FEDatabase;
+class AccountDatabase;
 
 class Frontend
     : public QObject
@@ -23,19 +26,29 @@ public:
     static void signalHandler(int signal);
 
     void init(QGuiApplication *app);
-    Q_INVOKABLE void postinit();
 
     void setLocale(QString locale);
 
-    QString passwordGetWait(const QString &description, const bool create = false);
+    Q_INVOKABLE QString passwordGetWait(const QString &description, const bool create = false);
+
+    Q_INVOKABLE QJsonArray getAccounts();
+    Q_INVOKABLE int createAccount(const QJsonObject &account, const QString &password);
+    Q_INVOKABLE bool openAccount(const int id);
+    Q_INVOKABLE void closeAccount();
+
+    Q_INVOKABLE AccountDatabase* getCurrentAccount();
 
 signals:
+    void postinitDone();
     void requestPassword(const QString description, const bool create);
     void donePassword(int code);
 
 public slots:
     void deleteMe() { Frontend::destroyI(); }
     void responsePassword(const QString password);
+
+private slots:
+    void postinit();
 
 private:
     explicit Frontend(QObject *parent = 0);
@@ -61,7 +74,6 @@ private:
     PrivKey         *m_device_passkey;
     Backend         *m_backend;
     FEDatabase      *m_database;
-
 };
 
 #endif // FRONTEND_H

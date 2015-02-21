@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlComponent>
 #include <QtQml/QQmlContext>
 #include <QTranslator>
 #include <QScreen>
@@ -17,6 +18,7 @@
 #include "settings.h"
 #include "backend/backend.h"
 #include "crypto/crypto.h"
+#include "accountdatabase.h"
 
 Frontend* Frontend::s_pInstance = NULL;
 
@@ -82,6 +84,8 @@ void Frontend::initInterface()
     m_context->setContextProperty("settings", Settings::I());
     m_context->setContextProperty("screenScale",
                                   QGuiApplication::primaryScreen()->physicalDotsPerInch() * QGuiApplication::primaryScreen()->devicePixelRatio() / 100);
+
+    qmlRegisterUncreatableType<AccountDatabase>("co.asocial", 1, 0, "AccountDatabase", "External type");
 }
 
 void Frontend::initLocale()
@@ -105,6 +109,8 @@ void Frontend::postinit()
     postinitDevicePassKey();
     postinitBackend();
     postinitDatabase();
+
+    emit postinitDone();
 }
 
 void Frontend::postinitDevicePassKey()
@@ -176,6 +182,31 @@ QString Frontend::passwordGetWait(const QString &description, const bool create)
     password = m_password;
     m_password = "";
     return password;
+}
+
+QJsonArray Frontend::getAccounts()
+{
+    return m_database->getAccounts();
+}
+
+int Frontend::createAccount(const QJsonObject &account, const QString &password)
+{
+    return m_database->createAccount(account, password);
+}
+
+bool Frontend::openAccount(const int id)
+{
+    return m_database->openAccount(id);
+}
+
+void Frontend::closeAccount()
+{
+    return m_database->closeAccount();
+}
+
+AccountDatabase* Frontend::getCurrentAccount()
+{
+    return m_database->getCurrentAccount();
 }
 
 void Frontend::responsePassword(const QString password)

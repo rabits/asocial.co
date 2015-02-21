@@ -1,6 +1,6 @@
 #include "frontend/frontend.h"
 
-#include <QTime>
+#include <QDateTime>
 #include <QGuiApplication>
 #include <QFile>
 #include <cstdio>
@@ -11,7 +11,7 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &, const QString &
 {
     switch (type) {
         case QtDebugMsg:
-            ::std::fprintf(stderr, "[aSocial %s] %s\n", QTime::currentTime().toString("hh:mm:ss.zzz").toLocal8Bit().constData(), msg.toLocal8Bit().constData());
+            ::std::fprintf(stderr, "[aSocial %s] %s\n", QDateTime::currentDateTime().toString("dd.MM.yy hh:mm:ss.zzz").toLocal8Bit().constData(), msg.toLocal8Bit().constData());
             break;
         case QtWarningMsg:
             ::std::fprintf(stderr, "[aSocial] Warning: %s\n", msg.toLocal8Bit().constData());

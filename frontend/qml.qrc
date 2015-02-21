@@ -3,5 +3,12 @@
         <file>qml/main.qml</file>
         <file>qml/PasswordRequest.qml</file>
         <file>qml/Components/Button.qml</file>
+        <file>qml/Accounts.qml</file>
+        <file>qml/ContextMenu.qml</file>
+        <file>qml/Account.qml</file>
+        <file>qml/Profile.qml</file>
+        <file>qml/Components/ScrollBar.qml</file>
+        <file>qml/js/account.js</file>
+        <file>qml/Components/EditableText.qml</file>
     </qresource>
 </RCC>

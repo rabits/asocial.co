@@ -10,11 +10,9 @@ Rectangle {
 
     signal done(string password)
 
-    property bool _create_new_password: false
-
     function show(description, create) {
         desc.text = description
-        _create_new_password = create
+        state = create ? 'create new password' : ''
         component.visible = true
         input.focus = true
     }
@@ -22,13 +20,18 @@ Rectangle {
     function hideOk() {
         if( input.text == "" ) {
             desc.color = "#f00"
-            desc.text = "Password can't be empty"
+            desc.text = qsTr("Password can't be empty")
             return
         }
-        if( _create_new_password ) {
-            if( input.text != input_repeat.text ) {
+        if( state === 'create new password' ) {
+            if( input_repeat.text == "" ) {
+                desc.color = "#000"
+                desc.text = qsTr("Please repeat password")
+                input_repeat.focus = true
+                return
+            } else if( input.text != input_repeat.text ) {
                 desc.color = "#f00"
-                desc.text = "Passwords not match"
+                desc.text = qsTr("Passwords not match")
                 input_repeat.text = ""
                 input_repeat.focus = true
                 return
@@ -98,11 +101,12 @@ Rectangle {
                     horizontalAlignment: TextInput.AlignHCenter
                     verticalAlignment: TextInput.AlignVCenter
                     onAccepted: {
-                        if( _create_new_password && input_repeat.text == "" )
+                        if( state === 'create new password' && input_repeat.text == "" )
                             input_repeat.focus = true
                         else
                             hideOk()
                     }
+                    KeyNavigation.tab: input_repeat
 
                     font {
                         bold: true
@@ -116,6 +120,7 @@ Rectangle {
             }
 
             Rectangle {
+                id: repeat_password
                 color: "#33000000"
                 border.color: input_repeat.text == input.text ? "#000" : "#f00"
                 border.width: 2 * screenScale
@@ -123,7 +128,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
 
-                visible: _create_new_password
+                visible: false
 
                 Text {
                     color: "#44333333"
@@ -151,6 +156,7 @@ Rectangle {
                     horizontalAlignment: TextInput.AlignHCenter
                     verticalAlignment: TextInput.AlignVCenter
                     onAccepted: hideOk()
+                    KeyNavigation.tab: input
 
                     font {
                         bold: true
@@ -176,6 +182,13 @@ Rectangle {
                 onClicked: hideOk()
             }
         }
-
     }
+
+    states: [
+        State {
+            name: 'create new password'
+            PropertyChanges { target: repeat_password; visible: true }
+            PropertyChanges { target: window; height: 150 }
+        }
+    ]
 }

@@ -6,15 +6,26 @@
 #define DATABASE_MINIMAL_VERSION 0
 
 #include <QDebug>
+#include <QDir>
 #include <QtSql/QSqlQuery>
 #include <QtSql/QSqlError>
-#include <QStringList>
+
+#include "crypto/crypto.h"
+#include "accountdatabase.h"
+#include "frontend/frontend.h"
 
 FEDatabase::FEDatabase(QObject *parent, QString name, QString path)
-    : SqlDatabase(parent, name, path)
+    : SqlDatabase(parent, "main.sql", path + "/" + name)
     , m_version(-1)
+    , m_active_account(NULL)
 {
     qDebug() << "Creating FE Database" << name;
+}
+
+FEDatabase::~FEDatabase()
+{
+    delete m_active_account;
+    qDebug("Destroy FE Database");
 }
 
 void FEDatabase::open(const QString &password)
@@ -39,6 +50,113 @@ void FEDatabase::open(const QString &password)
     }
 }
 
+QJsonArray FEDatabase::getAccounts()
+{
+    qDebug("Requesting accounts list");
+
+    QSqlQuery query(m_db);
+    QJsonArray out;
+    if( ! query.exec("SELECT rowid, name, description FROM accounts ORDER BY rowid ASC") ) {
+        qCritical() << m_db.lastError();
+    } else {
+        while( query.next() ) {
+            QJsonObject obj;
+            obj["id"] = query.value("rowid").toInt();
+            obj["name"] = query.value("name").toString();
+            obj["description"] = query.value("description").toString();
+            out.append(obj);
+        }
+    }
+
+    return out;
+}
+
+int FEDatabase::createAccount(const QJsonObject &account, const QString &password)
+{
+    qDebug("Creating new account");
+
+    // Generate new passkey for the account
+    PrivKey* passkey = Crypto::I()->genKey();
+
+    if( ! password.isEmpty() )
+        passkey->encrypt(password);
+
+    QSqlQuery query(m_db);
+    query.prepare("INSERT INTO accounts (name, description, passkey, passkey_encrypted) VALUES (:name, :description, :passkey, :passkey_encrypted)");
+    query.bindValue(":name", QVariant::fromValue(account.value("name")));
+    query.bindValue(":description", QVariant::fromValue(account.value("description")));
+    query.bindValue(":passkey", QVariant::fromValue(passkey->getData()));
+    query.bindValue(":passkey_encrypted", QVariant::fromValue(!password.isEmpty()));
+
+    if( ! query.exec() )
+        qCritical() << query.lastError();
+
+    // Create database for the new account, if it doesn't exists
+    return query.lastInsertId().toInt();
+}
+
+bool FEDatabase::openAccount(const int id)
+{
+    qDebug("Opening account database");
+
+    if( m_active_account != NULL ) {
+        qCritical("Active account is opened. Please close account and try again");
+        return false;
+    }
+
+    QString dbdir = m_path + "/account";
+    QString dbfile = QString::number(id).append(".sql");
+
+    QDir(dbdir).mkpath(".");
+
+    // Check & upgrade database
+    m_active_account = new AccountDatabase(this, dbfile, dbdir);
+    PrivKey* passkey = getAccountPassKey(id);
+
+    QByteArray passkey_d;
+    while( ! passkey->decrypt(Frontend::I()->passwordGetWait(qtTrId("Account password")), passkey_d) ) {}
+
+    m_active_account->open(passkey_d);
+    passkey_d.fill('*');
+
+    return true;
+}
+
+void FEDatabase::closeAccount()
+{
+    delete m_active_account;
+    m_active_account = NULL;
+}
+
+AccountDatabase* FEDatabase::getCurrentAccount()
+{
+    if( m_active_account == NULL ) {
+        qCritical("No active account present. Please open account and try again");
+        return NULL;
+    }
+    return m_active_account;
+}
+
+PrivKey* FEDatabase::getAccountPassKey(const int id)
+{
+    qDebug("Getting account passkey");
+
+    QSqlQuery query(m_db);
+
+    PrivKey* passkey = new PrivKey(this);
+
+    if( ! query.exec(QString("SELECT passkey, passkey_encrypted FROM accounts WHERE rowid = %1 LIMIT 1").arg(id)) ) {
+        qCritical() << query.lastError();
+    } else {
+        if( query.next() ) {
+            delete passkey;
+            passkey = new PrivKey(this, query.value("passkey").toByteArray(), query.value("passkey_encrypted").toBool());
+        }
+    }
+
+    return passkey;
+}
+
 long FEDatabase::version()
 {
     if( m_version != -1 )
@@ -46,14 +164,14 @@ long FEDatabase::version()
 
     qDebug("Get database version");
 
-    // We need to prepare table before query it
+    // Prepare table before query it
     table("database", QStringList()
           << "version int not null"
           << "description text not null");
 
     QSqlQuery query(m_db);
     if( ! query.exec("SELECT version FROM database ORDER BY rowid DESC LIMIT 1") ) {
-        qCritical() << m_db.lastError();
+        qCritical() << query.lastError();
     } else {
         query.next();
         if( ! query.isNull(0) ) {
@@ -77,7 +195,7 @@ void FEDatabase::setVersion(const long version, const QString &description)
     query.bindValue(":description", description);
 
     if( ! query.exec() )
-        qCritical() << m_db.lastError();
+        qCritical() << query.lastError();
 
     m_version = version;
 }
@@ -91,7 +209,11 @@ void FEDatabase::upgrade(const long from_version)
     // Changes in versions should be applied consistently
     switch( from_version + 1 ) {
         case 1:
-            // Still no changes
+            table("accounts", QStringList()
+                  << "name text not null"
+                  << "description text not null"
+                  << "passkey blob"
+                  << "passkey_encrypted integer");
             setVersion(1, "First version of database");
         default:
             qDebug() << "Upgrade done";
