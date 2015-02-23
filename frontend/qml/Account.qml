@@ -20,7 +20,7 @@ Rectangle {
         if( main_profile.address === undefined ) {
             main_profile = {
                 address: '',
-                data: {first_name: 'FirstName', last_name: 'LastName', birth_date: '04.01.1988', },
+                data: {first_name: '', last_name: '', birth_date: '', avatar_url: '', avatar_thumbnail_url: ''},
                 overlay: {},
                 description: ''
             }

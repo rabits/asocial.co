@@ -1,35 +1,37 @@
 import QtQuick 2.4
 
 Rectangle {
-    id: editable_text
+    id: root
 
     color: "#00000000"
 
-    width: text_content.childrenRect.width + 4
+    width: (text_edit.length === 0) ? text_default.contentWidth + 4 : text_edit.contentWidth + 4//text_content.childrenRect.width + 4
     height: text_content.childrenRect.height + 4
 
     radius: 2
 
-    property alias font: bg_text.font
-    property alias default_text: bg_text.text
-    property alias text: text.text
+    property alias font: text_main.font
+    property alias style: text_main.style
+    property alias styleColor: text_main.styleColor
+    property alias default_text: text_default.text
+    property alias text: text_main.text
 
     property Item next_item
 
     signal done(string text)
 
     function setEdit(is) {
-        editable_text.enabled = true
+        root.enabled = true
         if( is === true ) {
-            editable_text.state = 'edit'
+            root.state = 'edit'
         } else {
-            editable_text.state = ''
+            root.state = ''
         }
     }
 
     onFocusChanged: {
         if( focus === true )
-            text.focus = true
+            text_edit.focus = true
     }
 
     MouseArea {
@@ -39,10 +41,10 @@ Rectangle {
         cursorShape: Qt.IBeamCursor
 
         onEntered: {
-            editable_text.border.width = 1
+            root.border.width = 1
         }
         onExited: {
-            editable_text.border.width = 0
+            root.border.width = 0
         }
 
         Rectangle {
@@ -54,22 +56,36 @@ Rectangle {
             }
 
             Text {
-                id: bg_text
+                id: text_default
+
                 color: '#aaa'
-                visible: text.length === 0
+                font: text_main.font
+                style: text_main.style
+                styleColor: text_main.styleColor
+
+                visible: text_edit.length === 0
             }
+            Text {
+                id: text_main
+            }
+
             TextInput {
-                id: text
+                id: text_edit
                 selectByMouse: true
+                visible: false
                 enabled: false
-                focus: editable_text.focus
+                focus: root.focus
 
-                width: Math.max(contentWidth, bg_text.width)
-                height: Math.max(contentHeight, bg_text.height)
+                width: Math.max(contentWidth, text_default.width)
+                height: Math.max(contentHeight, text_default.height)
 
-                font: bg_text.font
+                font: text_main.font
+                text: text_main.text
 
-                onAccepted: done(text.text)
+                onAccepted: {
+                    text_main.text = text_edit.text
+                    done(text_edit.text)
+                }
                 KeyNavigation.tab: next_item
             }
         }
@@ -78,8 +94,9 @@ Rectangle {
     states: [
         State {
             name: "edit"
-            PropertyChanges { target: text; enabled: true }
-            PropertyChanges { target: editable_text; color: '#ccffffff' }
+            PropertyChanges { target: text_edit; visible: true; enabled: true }
+            PropertyChanges { target: text_main; visible: false }
+            PropertyChanges { target: root; color: '#ccffffff' }
         }
     ]
     transitions: [

@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import "Components"
 
 Item {
     id: profile
@@ -20,44 +21,98 @@ Item {
         id: background
         anchors.fill: parent
 
-        border.width: 1
+        border.width: (data_avatar_url.source == "") ? 1 : 0
 
         radius: 100
         color: "#dcffffff"
     }
 
-    Text {
-        anchors.fill: parent
+    Rectangle {
+        id: avatar_background
+        anchors {
+            top: parent.top
+            topMargin: 50
+            horizontalCenter: parent.horizontalCenter
+        }
 
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+        width: 100
+        height: 100
+        border.width: 1
 
-        text: obj_data.address
+        color: "#ccc"
+
+        Image {
+            id: data_avatar_url
+            anchors.fill: parent
+
+            fillMode: Image.PreserveAspectFit
+
+            source: obj_data.data.avatar_thumbnail_url
+        }
+
+        Text {
+            anchors.fill: parent
+            anchors.margins: 2
+
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+
+            fontSizeMode: Text.Fit
+            minimumPixelSize: 10
+            font.pixelSize: 72
+            font.weight: Font.Bold
+            color: "#22000000"
+
+            visible: data_avatar_url.source == ""
+
+            text: qsTr("No Avatar")
+        }
     }
 
-    Text {
-        anchors.fill: parent
+    EditableText {
+        id: data_first_name
+        anchors {
+            bottom: data_last_name.top
+            horizontalCenter: parent.horizontalCenter
+        }
 
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignTop
+        font.weight: Font.Bold
+        font.pixelSize: 16
+        style: Text.Outline
+        styleColor: "#fff"
+
+        default_text: qsTr("First Name")
+        enabled: false
 
         text: obj_data.data.first_name
     }
 
-    Text {
-        anchors.fill: parent
+    EditableText {
+        id: data_last_name
+        anchors {
+            bottom: parent.bottom
+            bottomMargin: 50
+            horizontalCenter: parent.horizontalCenter
+        }
 
-        horizontalAlignment: Text.AlignRight
-        verticalAlignment: Text.AlignTop
+        font.weight: Font.Bold
+        font.pixelSize: 16
+        style: Text.Outline
+        styleColor: "#fff"
+
+        default_text: qsTr("Last Name")
+        enabled: false
 
         text: obj_data.data.last_name
     }
 
-    Text {
-        anchors.fill: parent
+    EditableText {
+        id: data_birth_date
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: avatar_background.bottom
 
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignBottom
+        default_text: qsTr("Birth Date")
+        enabled: false
 
         text: obj_data.data.birth_date
     }
@@ -87,8 +142,12 @@ Item {
         State {
             name: "master"
             PropertyChanges { target: background; radius: 0 }
-            PropertyChanges { target: profile; width: 300 }
-            PropertyChanges { target: profile; height: 400 }
+            PropertyChanges { target: profile; width: 300; height: 400 }
+            PropertyChanges { target: avatar_background; width: 200; height: 300; anchors.topMargin: 20 }
+            PropertyChanges { target: data_avatar_url; source: obj_data.data.avatar_url }
+            PropertyChanges { target: data_first_name; font.pixelSize: 20 }
+            PropertyChanges { target: data_birth_date; visible: false }
+            PropertyChanges { target: data_last_name; font.pixelSize: 20; anchors.bottomMargin: 20 }
         }
     ]
     transitions: [
