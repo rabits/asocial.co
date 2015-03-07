@@ -5,7 +5,7 @@ Rectangle {
 
     color: "#00000000"
 
-    width: (text_edit.length === 0) ? text_default.contentWidth + 4 : text_edit.contentWidth + 4//text_content.childrenRect.width + 4
+    width: (text_edit.length === 0) ? text_default.contentWidth + 4 : text_edit.contentWidth + 4
     height: text_content.childrenRect.height + 4
 
     radius: 2
@@ -15,22 +15,25 @@ Rectangle {
     property alias styleColor: text_main.styleColor
     property alias default_text: text_default.text
     property alias text: text_main.text
+    property bool editable: false
 
     property Item next_item
 
     signal done(string text)
 
+    onEditableChanged: {
+        // Save current value
+        if( ! editable )
+            root.text = text_edit.text
+    }
+
     function setEdit(is) {
         root.enabled = true
-        if( is === true ) {
-            root.state = 'edit'
-        } else {
-            root.state = ''
-        }
+        root.editable = is
     }
 
     onFocusChanged: {
-        if( focus === true )
+        if( focus )
             text_edit.focus = true
     }
 
@@ -85,6 +88,7 @@ Rectangle {
                 onAccepted: {
                     text_main.text = text_edit.text
                     done(text_edit.text)
+                    next_item.focus = true
                 }
                 KeyNavigation.tab: next_item
             }
@@ -94,6 +98,7 @@ Rectangle {
     states: [
         State {
             name: "edit"
+            when: root.editable
             PropertyChanges { target: text_edit; visible: true; enabled: true }
             PropertyChanges { target: text_main; visible: false }
             PropertyChanges { target: root; color: '#ccffffff' }

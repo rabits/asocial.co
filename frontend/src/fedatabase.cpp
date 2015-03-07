@@ -57,7 +57,7 @@ QJsonArray FEDatabase::getAccounts()
     QSqlQuery query(m_db);
     QJsonArray out;
     if( ! query.exec("SELECT rowid, name, description FROM accounts ORDER BY rowid ASC") ) {
-        qCritical() << m_db.lastError();
+        qCritical() << query.lastError();
     } else {
         while( query.next() ) {
             QJsonObject obj;

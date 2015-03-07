@@ -19,6 +19,7 @@
 #include "backend/backend.h"
 #include "crypto/crypto.h"
 #include "accountdatabase.h"
+#include "storage/internalimageprovider.h"
 
 Frontend* Frontend::s_pInstance = NULL;
 
@@ -86,6 +87,8 @@ void Frontend::initInterface()
                                   QGuiApplication::primaryScreen()->physicalDotsPerInch() * QGuiApplication::primaryScreen()->devicePixelRatio() / 100);
 
     qmlRegisterUncreatableType<AccountDatabase>("co.asocial", 1, 0, "AccountDatabase", "External type");
+
+    m_engine->addImageProvider(QLatin1String("InternalStorage"), new InternalImageProvider);
 }
 
 void Frontend::initLocale()

@@ -25,6 +25,12 @@ function getBoundY(y) {
     return y
 }
 
+function sheetMouseRelease(mouse) {
+    for( var c in sheet.children ) {
+        sheet.children[c].mouseReleased(mouse)
+    }
+}
+
 var db = null
 
 function setDB() {
@@ -40,4 +46,9 @@ function getProfile(id_address) {
 function createProfile(obj_data) {
     setDB()
     return db.createProfile(obj_data)
+}
+
+function updateProfileData(profile) {
+    setDB()
+    return db.updateProfileData(profile)
 }

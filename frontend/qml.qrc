@@ -10,5 +10,7 @@
         <file>qml/Components/ScrollBar.qml</file>
         <file>qml/js/account.js</file>
         <file>qml/Components/EditableText.qml</file>
+        <file>qml/Components/WaitAction.qml</file>
+        <file>qml/js/profile.js</file>
     </qresource>
 </RCC>

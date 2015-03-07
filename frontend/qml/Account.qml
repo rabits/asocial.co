@@ -1,6 +1,6 @@
 import QtQuick 2.4
 import "Components"
-import "js/account.js" as Lib
+import "js/account.js" as A
 
 Rectangle {
     id: account
@@ -14,17 +14,17 @@ Rectangle {
             return false
         }
 
-        var main_profile = Lib.getProfile(1)
+        var main_profile = A.getProfile(1)
 
         // Create main profile, if it doesn't exists
         if( main_profile.address === undefined ) {
             main_profile = {
                 address: '',
-                data: {first_name: '', last_name: '', birth_date: '', avatar_url: '', avatar_thumbnail_url: ''},
+                data: {first_name: '', last_name: '', birth_date: '', avatar_url: '', avatar_url_eq: ''},
                 overlay: {},
                 description: ''
             }
-            main_profile.id = Lib.createProfile(main_profile)
+            main_profile.id = A.createProfile(main_profile)
         }
 
         account.visible = true
@@ -58,11 +58,11 @@ Rectangle {
     }
 
     function returnToBounds() {
-        moveViewTo(Qt.point( Lib.getBoundX(sheet.x), Lib.getBoundY(sheet.y) ), 500, 500)
+        moveViewTo(Qt.point( A.getBoundX(sheet.x), A.getBoundY(sheet.y) ), 500, 500)
     }
 
     function moveToCenterOf(target_point) {
-        moveViewTo(Qt.point( Lib.getBoundX(target_point.x), Lib.getBoundY(target_point.y) ), 200, 200)
+        moveViewTo(Qt.point( A.getBoundX(target_point.x), A.getBoundY(target_point.y) ), 200, 200)
     }
 
     property point _prev_pos // Used in inertia animation
@@ -70,8 +70,8 @@ Rectangle {
         // TODO: rewrite to infinitie animation
         var new_x = sheet.x + (sheet.x - _prev_pos.x) * 20 * 100
         var new_y = sheet.y + (sheet.y - _prev_pos.y) * 20 * 100
-        var bound_x = Lib.getBoundX(new_x)
-        var bound_y = Lib.getBoundY(new_y)
+        var bound_x = A.getBoundX(new_x)
+        var bound_y = A.getBoundY(new_y)
 
         var duration_x = 100000
         var duration_y = 100000
@@ -107,27 +107,28 @@ Rectangle {
             acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
             property point _grab_point
+            property bool _stealed
+            property point _push_point
 
             onClicked: {
-                console.log("Clicked")
+                console.log("Clicked Account")
                 if( mouse.button === Qt.RightButton ) {
                     moveToCenterOf(Qt.point(sheet.x - mouse.x + visible_area.width/2, sheet.y - mouse.y + visible_area.height/2))
                 }
-                mouse.accepted = false
-            }
-
-            onDoubleClicked: {
-                console.log("Double clicked")
-                mouse.accepted = false
             }
 
             onPressed: {
+                console.log("Pressed Account")
                 move_to.stop()
+                _push_point = Qt.point(mouse.x, mouse.y)
+                _stealed = false
                 _grab_point = Qt.point(sheet.x - mouse.x, sheet.y - mouse.y)
                 _prev_pos = Qt.point(sheet.x, sheet.y)
             }
             onReleased: {
+                console.log("Released Account")
                 activateInertia()
+                A.sheetMouseRelease(mouse)
             }
 
             onPositionChanged: {
@@ -137,10 +138,19 @@ Rectangle {
 
                     sheet.x = mouse.x + _grab_point.x
                     sheet.y = mouse.y + _grab_point.y
+
+                    // Release childrens if mouse is far away from the last point
+                    if( _stealed !== true ) {
+                        if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 ) {
+                            _stealed = true
+                            A.sheetMouseRelease(mouse)
+                        }
+                    }
                 }
             }
 
             onWheel: {
+                console.log("Wheel Account")
                 if( wheel.angleDelta.y < 0 ) {
                     // Zoom out
                     sheet.scale /= 2

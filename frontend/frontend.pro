@@ -10,14 +10,18 @@ SOURCES += \
     src/main.cpp \
     src/frontend.cpp \
     src/fedatabase.cpp \
-    src/accountdatabase.cpp
+    src/accountdatabase.cpp \
+    src/storage/internalimageprovider.cpp \
+    src/storage/internalstorage.cpp
 
 RESOURCES += qml.qrc
 
 HEADERS += \
     include/frontend/frontend.h \
     src/fedatabase.h \
-    src/accountdatabase.h
+    src/accountdatabase.h \
+    src/storage/internalimageprovider.h \
+    src/storage/internalstorage.h
 
 OTHER_FILES += \
     scripts/asocial

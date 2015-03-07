@@ -17,6 +17,7 @@ public:
 
     Q_INVOKABLE int createProfile(const QJsonObject &profile);
     Q_INVOKABLE QJsonObject getProfile(const int id);
+    Q_INVOKABLE bool updateProfileData(const QJsonObject &profile);
 
 private:
     long version();

@@ -67,7 +67,7 @@ QJsonObject AccountDatabase::getProfile(const int id)
     query.bindValue(":id", id);
 
     if( ! query.exec() ) {
-        qCritical() << m_db.lastError();
+        qCritical() << query.lastError();
     } else if( query.next() ) {
         out["id"] = query.value("id").toInt();
         out["address"] = query.value("address").toString();
@@ -79,6 +79,24 @@ QJsonObject AccountDatabase::getProfile(const int id)
     }
 
     return out;
+}
+
+bool AccountDatabase::updateProfileData(const QJsonObject &profile)
+{
+    qDebug("Updating profile data");
+
+    QSqlQuery query(m_db);
+
+    query.prepare("UPDATE profiles SET data = :data WHERE rowid = :id");
+    query.bindValue(":id", profile.value("id").toInt());
+    query.bindValue(":data", QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact));
+
+    if( ! query.exec() ) {
+        qCritical() << query.lastError();
+        return false;
+    }
+
+    return true;
 }
 
 long AccountDatabase::version()
@@ -95,7 +113,7 @@ long AccountDatabase::version()
 
     QSqlQuery query(m_db);
     if( ! query.exec("SELECT version FROM database ORDER BY rowid DESC LIMIT 1") ) {
-        qCritical() << m_db.lastError();
+        qCritical() << query.lastError();
     } else {
         query.next();
         if( ! query.isNull(0) ) {
@@ -119,7 +137,7 @@ void AccountDatabase::setVersion(const long version, const QString &description)
     query.bindValue(":description", description);
 
     if( ! query.exec() )
-        qCritical() << m_db.lastError();
+        qCritical() << query.lastError();
 
     m_version = version;
 }
@@ -138,20 +156,37 @@ void AccountDatabase::upgrade(const long from_version)
                   << "privkey blob"
                   << "privkey_encrypted integer"
                   << "description text");
+
             table("devices", QStringList()
-                  << "name text not null"
+                  << "name text not null"       // Name of device
+                  << "address text not null"    // Bitcoin device address
+                  << "data text not null"       // Json with device key id, picture etc
+                  << "description text");       // Description for device
+
+            table("profiles", QStringList()     // Contains profiles of users
                   << "address text not null"
-                  << "data text not null"        // Json with device key id, picture etc
-                  << "description text");
-            table("profiles", QStringList()      // Contains profiles of users
-                  << "address text not null"
-                  << "data text not null"        // Json with profile data
-                  << "overlay text not null"     // Json overlay profile data
+                  << "data text not null"       // Json with profile data
+                  << "overlay text not null"    // Json overlay profile data
                   << "description text not null");
-            table("history", QStringList()
-                  << "date integer not null"
-                  << "data text not null"
-                  << "description text");
+
+            table("history", QStringList()      // History of profiles / links changes
+                  << "date integer not null"    // Change date
+                  << "data text not null"       // Changed data
+                  << "description text");       // Description of change
+
+            table("storage_type", QStringList()
+                  << "name text not null");     // Readable name of storage data type
+            query.exec("INSERT INTO media_type (name) VALUES ('image'), ('audio'), ('video'), ('file')");
+
+            table("storage_metadata", QStringList()
+                  << "type int not null"        // Type of media
+                  << "owner_id int not null"    // Data owner
+                  << "url text not null"        // URL to find media
+                  << "data text not null");     // Json with metadata
+
+            table("storage_data", QStringList()
+                  << "data blob not null");     // Private place for storage data, is managed by InternalStorage
+
             setVersion(1, "First version of database");
         default:
             qDebug() << "Upgrade done";
