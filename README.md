@@ -18,7 +18,7 @@ Basic features
 ### Profile
 Your social profile, that contains any information you need (like achievements, projects, blog posts etc...)
 
-### Links
+### Connections
 Any interaction with other profiles (like personal messages, chats, likes etc.)
 
 ### Tree of life
@@ -58,6 +58,9 @@ You can transmit your profile between known devices to eliminate the possibility
 Secondary objectives
 --------------------
 Cool trifles that would be great to see in the application.
+
+### HTTP/HTTPS support
+Small http server, that provides access to your data. Makes possible to create links for other people, that don't have asocial application and simple would like to see your profile or part of your data.
 
 ### Make the ability to transfer money to any person with whom you do not even know
 Device has identifier (like profile) - it is the Bitcoin address. So, you can transfer your money to any device in network.
