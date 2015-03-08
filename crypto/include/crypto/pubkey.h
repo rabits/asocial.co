@@ -12,13 +12,12 @@ public:
     explicit PubKey(QObject *parent = 0, const QByteArray &pub_key = "", bool compressed = true);
     ~PubKey();
 
-    const QString getAddress();
+    const QString getAddress() const;
     const QByteArray getData() const;
 
 private:
     QByteArray m_pubkey;
     bool       m_compressed;
-    QString    m_address;
 };
 
 #endif // PUBKEY_H
