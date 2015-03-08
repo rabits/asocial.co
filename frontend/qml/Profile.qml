@@ -21,6 +21,7 @@ Item {
 
     function mouseReleased(mouse) {
         console.log("Released Profile")
+        background_highlight.visible = false
         profile_edit.stop()
     }
 
@@ -29,10 +30,24 @@ Item {
         anchors.fill: parent
         antialiasing: true
 
-        border.width: (data_avatar_url.source == "") ? 1 : 0
+        clip: true
 
-        radius: 100
-        color: "#dcffffff"
+        border.width: 1
+        border.color: (obj_data.address === "") ? "#aaa" : "#000"
+
+        radius: background.width/2
+        color: (obj_data.address === "") ? "#33ffffff" : "#dcffffff"
+
+        Rectangle {
+            id: background_highlight
+            anchors.fill: parent
+            visible: false
+            opacity: 0.2
+
+            radius: parent.radius
+
+            color: "#0f0"
+        }
     }
 
     MouseArea {
@@ -43,9 +58,16 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
         onPressed: {
-            console.log("Pressed Profile")
-            profile_edit.start(mouse)
             mouse.accepted = false
+            if( background.radius > 0 ) {
+                // Background is not squared - so, let's check that point in radius
+                if( Math.pow(mouse.x - root.x - background.radius, 2) + Math.pow(mouse.y - root.y - background.radius, 2) > Math.pow(background.radius, 2) )
+                    return
+            }
+
+            console.log("Pressed Profile")
+            background_highlight.visible = true
+            profile_edit.start(mouse)
         }
 
         Rectangle {
@@ -172,7 +194,7 @@ Item {
             name: "edit_"
             PropertyChanges { target: data_first_name; enabled: true; editable: true }
             PropertyChanges { target: data_last_name; enabled: true; editable: true }
-            PropertyChanges { target: data_birth_date; enabled: true; editable: true; visible: true }
+            PropertyChanges { target: data_birth_date; enabled: true; editable: true }
             PropertyChanges { target: background; color: "#0f0" }
         },
         State {

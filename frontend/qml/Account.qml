@@ -19,7 +19,7 @@ Rectangle {
         // Create main profile, if it doesn't exists
         if( main_profile.address === undefined ) {
             main_profile = {
-                address: '',
+                address: A.createAddress(),
                 data: {first_name: '', last_name: '', birth_date: '', avatar_url: '', avatar_url_eq: ''},
                 overlay: {},
                 description: ''

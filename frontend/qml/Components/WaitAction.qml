@@ -3,6 +3,7 @@ import QtQuick 2.4
 Rectangle {
     id: root
     visible: false
+    opacity: 0.0
 
     property alias script: arrow_script.script
 
@@ -38,6 +39,17 @@ Rectangle {
             ScriptAction { id: arrow_script }
             ScriptAction { script: root.stop() }
         }
+    }
+
+    states: [
+        State {
+            name: "visible"
+            when: visible
+            PropertyChanges { target: root; opacity: 1.0 }
+        }
+    ]
+    transitions: Transition {
+        NumberAnimation { property: "opacity"; duration: 500; from: 0.0; to: 1.0; easing.type: Easing.InQuart }
     }
 }
 

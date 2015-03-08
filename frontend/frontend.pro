@@ -14,7 +14,8 @@ SOURCES += \
     src/storage/internalimageprovider.cpp \
     src/storage/internalstorage.cpp
 
-RESOURCES += qml.qrc
+RESOURCES += \
+    qml.qrc
 
 HEADERS += \
     include/frontend/frontend.h \

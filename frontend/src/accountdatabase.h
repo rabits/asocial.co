@@ -3,6 +3,8 @@
 
 #include "database/sqldatabase.h"
 
+#include "crypto/privkey.h"
+
 #include <QJsonObject>
 
 class AccountDatabase
@@ -18,6 +20,10 @@ public:
     Q_INVOKABLE int createProfile(const QJsonObject &profile);
     Q_INVOKABLE QJsonObject getProfile(const int id);
     Q_INVOKABLE bool updateProfileData(const QJsonObject &profile);
+
+    Q_INVOKABLE QString createAddress();
+
+    Q_INVOKABLE int storeKey(const PrivKey* key, const QString description);
 
 private:
     long version();

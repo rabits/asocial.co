@@ -5,6 +5,8 @@
 // Backward-compatibility with all versions greater than
 #define DATABASE_MINIMAL_VERSION 0
 
+#include "crypto/crypto.h"
+
 #include <QDebug>
 #include <QtSql/QSqlQuery>
 #include <QtSql/QSqlError>
@@ -45,10 +47,10 @@ int AccountDatabase::createProfile(const QJsonObject &profile)
 
     QSqlQuery query(m_db);
     query.prepare("INSERT INTO profiles (address, data, overlay, description) VALUES (:address, :data, :overlay, :description)");
-    query.bindValue(":address", QVariant::fromValue(profile.value("address")));
+    query.bindValue(":address", profile.value("address").toString());
     query.bindValue(":data", QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact));
     query.bindValue(":overlay", QJsonDocument(profile.value("overlay").toObject()).toJson(QJsonDocument::Compact));
-    query.bindValue(":description", QVariant::fromValue(profile.value("description")));
+    query.bindValue(":description", profile.value("description").toString());
 
     if( ! query.exec() )
         qCritical() << query.lastError();
@@ -97,6 +99,36 @@ bool AccountDatabase::updateProfileData(const QJsonObject &profile)
     }
 
     return true;
+}
+
+QString AccountDatabase::createAddress()
+{
+    PrivKey* key = Crypto::I()->genKey();
+    QString address = key->getPubKey()->getAddress();
+
+    storeKey(key, "Key for primary account profile");
+
+    delete key;
+
+    return address;
+}
+
+int AccountDatabase::storeKey(const PrivKey *key, const QString description)
+{
+    qDebug() << "Store address" << key->getPubKey()->getAddress();
+
+    QSqlQuery query(m_db);
+    query.prepare("INSERT INTO keys (address, pubkey, privkey, privkey_encrypted, description) VALUES (:address, :pubkey, :privkey, :privkey_encrypted, :description)");
+    query.bindValue(":address", key->getPubKey()->getAddress());
+    query.bindValue(":pubkey", QVariant::fromValue(key->getPubKey()->getData()));
+    query.bindValue(":privkey", QVariant::fromValue(key->getData()));
+    query.bindValue(":privkey_encrypted", QVariant::fromValue(key->isEncrypted()));
+    query.bindValue(":description", description);
+
+    if( ! query.exec() )
+        qCritical() << query.lastError();
+
+    return query.lastInsertId().toInt();
 }
 
 long AccountDatabase::version()
@@ -152,6 +184,7 @@ void AccountDatabase::upgrade(const long from_version)
     switch( from_version + 1 ) {
         case 1:
             table("keys", QStringList()
+                  << "address text not null"
                   << "pubkey blob not null"
                   << "privkey blob"
                   << "privkey_encrypted integer"

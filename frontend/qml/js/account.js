@@ -52,3 +52,8 @@ function updateProfileData(profile) {
     setDB()
     return db.updateProfileData(profile)
 }
+
+function createAddress() {
+    setDB()
+    return db.createAddress()
+}
