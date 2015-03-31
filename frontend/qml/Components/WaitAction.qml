@@ -5,16 +5,26 @@ Rectangle {
     visible: false
     opacity: 0.0
 
-    property alias script: arrow_script.script
+    property point _pos
+    property var _current_slot: null
 
-    function start(pos) {
+    signal run(point pos)
+
+    function start(pos, slot) {
+        _pos = Qt.point(pos.x, pos.y)
+        _current_slot = slot
+
+        root.run.connect(_current_slot)
         root.x = pos.x - root.radius
         root.y = pos.y - root.radius
         root.visible = true
+
         arrow_animation.start()
     }
 
     function stop() {
+        if( _current_slot !== null )
+            root.run.disconnect(_current_slot)
         arrow_animation.stop()
         root.visible = false
     }
@@ -32,11 +42,12 @@ Rectangle {
         color: "#000"
         transform: Translate { y: -arrow.height/2 }
         transformOrigin: Item.Bottom
+
         SequentialAnimation on rotation {
             id: arrow_animation
             running: false
             RotationAnimation { from: 0; to: 360; duration: 1000 }
-            ScriptAction { id: arrow_script }
+            ScriptAction { script: root.run(root._pos) }
             ScriptAction { script: root.stop() }
         }
     }

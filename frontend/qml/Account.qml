@@ -8,6 +8,8 @@ Rectangle {
     clip: true
     color: "#ff777777"
 
+    property Profile _main_profile
+
     function show(account_id) {
         if( ! app.openAccount(account_id) ) {
             console.error("Unable to open account id#" + account_id)
@@ -18,51 +20,49 @@ Rectangle {
 
         // Create main profile, if it doesn't exists
         if( main_profile.address === undefined ) {
-            main_profile = {
-                address: A.createAddress(),
-                data: {first_name: '', last_name: '', birth_date: '', avatar_url: '', avatar_url_eq: ''},
-                overlay: {},
-                description: ''
-            }
+            main_profile = A.emptyProfileData()
+            main_profile.address = A.createAddress()
             main_profile.id = A.createProfile(main_profile)
         }
 
         account.visible = true
-        profile.createObject(sheet, {obj_data: main_profile}).master()
-        update()
+        _main_profile = A.createProfileObj(main_profile)
+        _main_profile.master()
+
+        updateSheet()
     }
     function hide() {
         account.visible = false
     }
-    function update() {
-        console.log("Update")
-        returnToBounds()
+
+    function updateSheet() {
+        console.log("Update sheet")
+
+        // Find minimal x & y values and move sheet childrens
+        var minX = null
+        var minY = null
+        for( var c in sheet.children ) {
+            if( minX === null ) {
+                minX = sheet.children[c].x
+                minY = sheet.children[c].y
+            } else {
+                minX = minX > sheet.children[c].x ? sheet.children[c].x : minX
+                minY = minY > sheet.children[c].y ? sheet.children[c].y : minY
+            }
+        }
+        if( minX != 0 || minY != 0 ) {
+            for( var c in sheet.children ) {
+                sheet.children[c].x -= minX
+                sheet.children[c].y -= minY
+            }
+        }
+
+        A.returnToBounds()
     }
 
     // View navigation functions
-    function moveViewTo(target_point, duration_x, duration_y, easing_x, easing_y) {
-        duration_x = duration_x !== undefined ? duration_x : 1000
-        duration_y = duration_y !== undefined ? duration_y : 1000
-        easing_x = easing_x !== undefined ? easing_x : Easing.OutExpo
-        easing_y = easing_y !== undefined ? easing_y : Easing.OutExpo
-
-        move_to.stop()
-
-        move_to.target_point = target_point
-        move_to.duration_x = duration_x
-        move_to.duration_y = duration_y
-        move_to.easing_x = easing_x
-        move_to.easing_y = easing_y
-
-        move_to.start()
-    }
-
-    function returnToBounds() {
-        moveViewTo(Qt.point( A.getBoundX(sheet.x), A.getBoundY(sheet.y) ), 500, 500)
-    }
-
-    function moveToCenterOf(target_point) {
-        moveViewTo(Qt.point( A.getBoundX(target_point.x), A.getBoundY(target_point.y) ), 200, 200)
+    function moveToCenterOf(target_point, scale) {
+        A.moveViewTo(Qt.point( A.getBoundX(target_point.x), A.getBoundY(target_point.y) ), 2000, 2000, Easing.OutExpo, Easing.OutExpo, scale, 2000, Easing.OutExpo)
     }
 
     property point _prev_pos // Used in inertia animation
@@ -88,7 +88,7 @@ Rectangle {
             easeing_y = Easing.OutBack
         }
 
-        moveViewTo(Qt.point( bound_x, bound_y ), duration_x, duration_y, easeing_x, easeing_y)
+        A.moveViewTo(Qt.point( bound_x, bound_y ), duration_x, duration_y, easeing_x, easeing_y)
     }
 
     Rectangle {
@@ -97,8 +97,8 @@ Rectangle {
         color: "#ccc"
         clip: true
 
-        onWidthChanged: returnToBounds()
-        onHeightChanged: returnToBounds()
+        onWidthChanged: A.returnToBounds()
+        onHeightChanged: A.returnToBounds()
 
         MouseArea {
             id: mouse_area
@@ -107,13 +107,13 @@ Rectangle {
             acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
             property point _grab_point
-            property bool _stealed
+            property bool _stealed: true
             property point _push_point
 
             onClicked: {
                 console.log("Clicked Account")
                 if( mouse.button === Qt.RightButton ) {
-                    moveToCenterOf(Qt.point(sheet.x - mouse.x + visible_area.width/2, sheet.y - mouse.y + visible_area.height/2))
+                    moveToCenterOf(Qt.point(sheet.x - mouse.x + visible_area.width/2, sheet.y - mouse.y + visible_area.height/2), sheet.scale)
                 }
             }
 
@@ -124,11 +124,13 @@ Rectangle {
                 _stealed = false
                 _grab_point = Qt.point(sheet.x - mouse.x, sheet.y - mouse.y)
                 _prev_pos = Qt.point(sheet.x, sheet.y)
+
+                A.delayedActionStart(mouse, A.createNewProfileObj)
             }
             onReleased: {
                 console.log("Released Account")
                 activateInertia()
-                A.sheetMouseRelease(mouse)
+                A.delayedActionStop()
             }
 
             onPositionChanged: {
@@ -143,7 +145,7 @@ Rectangle {
                     if( _stealed !== true ) {
                         if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 ) {
                             _stealed = true
-                            A.sheetMouseRelease(mouse)
+                            A.delayedActionStop()
                         }
                     }
                 }
@@ -151,13 +153,14 @@ Rectangle {
 
             onWheel: {
                 console.log("Wheel Account")
-                if( wheel.angleDelta.y < 0 ) {
-                    // Zoom out
-                    sheet.scale /= 2
-                } else {
-                    // Zoom in
-                    sheet.scale *= 2
-                }
+                _push_point = Qt.point(wheel.x, wheel.y)
+
+                var scale_factor = ( wheel.angleDelta.y > 0 ) ? 2 : 1/2
+
+                sheet.x = sheet.x - (_push_point.x - visible_area.width/2) * scale_factor
+                sheet.y = sheet.y - (_push_point.y - visible_area.height/2) * scale_factor
+
+                sheet.scale *= scale_factor
             }
 
             Rectangle {
@@ -165,20 +168,13 @@ Rectangle {
 
                 width: childrenRect.width
                 height: childrenRect.height
-                onWidthChanged: returnToBounds()
-                onHeightChanged: returnToBounds()
+                onWidthChanged: A.returnToBounds()
+                onHeightChanged: A.returnToBounds()
 
                 property int scaledWidth: width * scale
                 property int scaledHeight: height * scale
                 property int scaledX: x + width/2 - (width * scale)/2
                 property int scaledY: y + height/2 - (height * scale)/2
-
-                Behavior on scale {
-                    SequentialAnimation {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                        ScriptAction { script: returnToBounds() }
-                    }
-                }
             }
         }
 
@@ -193,17 +189,23 @@ Rectangle {
             NumberAnimation { property: "opacity"; from: 1.0; duration: 2000; easing.type: Easing.OutCubic }
         }
 
-        SequentialAnimation{
+        SequentialAnimation {
             id: move_to
             property point target_point
+            property double scale
             property int easing_x
             property int easing_y
+            property int easing_scale
             property int duration_x
             property int duration_y
+            property int duration_scale
+
             ParallelAnimation {
-                PropertyAnimation{ target: sheet; property: "x"; to: move_to.target_point.x; duration: move_to.duration_x; easing.type: move_to.easing_x }
-                PropertyAnimation{ target: sheet; property: "y"; to: move_to.target_point.y; duration: move_to.duration_y; easing.type: move_to.easing_y }
+                PropertyAnimation { target: sheet; property: "x"; to: move_to.target_point.x; duration: move_to.duration_x; easing.type: move_to.easing_x }
+                PropertyAnimation { target: sheet; property: "y"; to: move_to.target_point.y; duration: move_to.duration_y; easing.type: move_to.easing_y }
+                PropertyAnimation { target: sheet; property: "scale"; to: move_to.scale; duration: move_to.duration_scale; easing.type: move_to.easing_scale }
             }
+            //ScriptAction { script: A.returnToBounds() }
         }
     }
 
@@ -225,6 +227,10 @@ Rectangle {
         orientation: Qt.Vertical
         position: - sheet.scaledY / sheet.scaledHeight
         pageSize: visible_area.height / sheet.scaledHeight
+    }
+
+    WaitAction {
+        id: delayed_action
     }
 
     Component {

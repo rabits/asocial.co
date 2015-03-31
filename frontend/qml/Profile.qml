@@ -12,23 +12,59 @@ Item {
 
     property var obj_data
 
+    function createConnection(profile_id, pos) {
+        console.log("Create connection for #" + obj_data.id)
+        if( ! obj_data.data.connections )
+            obj_data.data.connections = []
+
+        var connection_key = obj_data.data.connections.push({"profile_id": profile_id, "pos": pos}) - 1
+        A.updateProfileData(obj_data)
+
+        return processConnection(obj_data.data.connections[connection_key])
+    }
+
+    function processConnection(connection) {
+        var profile_data = A.getProfile(connection.profile_id)
+        profile_data.data.pos = connection.pos
+        return A.createProfileObj(profile_data)
+    }
+
     function master() {
         console.log("Set master profile")
         state = 'master'
 
-        console.log(JSON.stringify(obj_data))
+        root.x = 0-300/2
+        root.y = 0-400/2
+
+        if( obj_data.data.connections ) {
+            for( var c in obj_data.data.connections )
+                root.processConnection(obj_data.data.connections[c])
+        }
     }
 
-    function mouseReleased(mouse) {
-        console.log("Released Profile")
-        background_highlight.visible = false
-        profile_edit.stop()
+    function editSwitch() {
+        if( root.state.split('_')[0] === "edit" ) {
+            root.state = root.state.split('_')[1]
+            P.updateData()
+            A.updateProfileData(obj_data)
+        } else {
+            root.state = "edit_" + root.state
+        }
+    }
+
+    Component.onCompleted: {
+        // Set position of profile
+        if( obj_data.data.pos ) {
+            root.x = obj_data.data.pos.x - root.width/2
+            root.y = obj_data.data.pos.y - root.height/2
+        }
     }
 
     Rectangle {
         id: background
         anchors.fill: parent
         antialiasing: true
+        smooth: true
 
         clip: true
 
@@ -57,22 +93,50 @@ Item {
 
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
+        property point _grab_point
+        property bool _stealed: true
+
         onPressed: {
-            mouse.accepted = false
+            console.log("PrePressed Profile #" + obj_data.id)
             if( background.radius > 0 ) {
                 // Background is not squared - so, let's check that point in radius
-                if( Math.pow(mouse.x - root.x - background.radius, 2) + Math.pow(mouse.y - root.y - background.radius, 2) > Math.pow(background.radius, 2) )
+                if( Math.pow(mouse.x - background.radius, 2) + Math.pow(mouse.y - background.radius, 2) > Math.pow(background.radius, 2) ) {
+                    mouse.accepted = false
                     return
+                }
             }
 
-            console.log("Pressed Profile")
+            console.log("Pressed Profile #" + obj_data.id)
+            console.log(JSON.stringify(obj_data))
+
+            _stealed = false
+            _grab_point = Qt.point(mouse.x, mouse.y)
             background_highlight.visible = true
-            profile_edit.start(mouse)
+
+            // TODO: Fix scaling & position bug
+            A.delayedActionStart(mouse, root.editSwitch)
+        }
+
+        onReleased: {
+            console.log("Released Profile #" + obj_data.id)
+            A.delayedActionStop()
+            background_highlight.visible = false
+        }
+
+        onPositionChanged: {
+            // Release childrens if mouse is far away from the last point
+            if( ! _stealed ) {
+                if( Math.abs(_grab_point.x - mouse.x) + Math.abs(_grab_point.y - mouse.y) > 10 ) {
+                    _stealed = true
+                    mouse_area.onReleased(mouse)
+                }
+            }
         }
 
         Rectangle {
             id: avatar_background
             antialiasing: true
+            smooth: true
             anchors {
                 top: parent.top
                 topMargin: 50
@@ -163,20 +227,6 @@ Item {
 
             text: obj_data.data.birth_date
         }
-
-        WaitAction {
-            id: profile_edit
-            script: {
-                if( root.state.split('_')[0] === "edit" ) {
-                    root.state = root.state.split('_')[1]
-                    P.updateData()
-                    console.log(JSON.stringify(obj_data))
-                    A.updateProfileData(obj_data)
-                } else {
-                    root.state = "edit_" + root.state
-                }
-            }
-        }
     }
 
     states: [
@@ -205,7 +255,6 @@ Item {
             PropertyChanges { target: data_birth_date; enabled: true; editable: true; visible: true }
             PropertyChanges { target: background; color: "#0f0" }
         }
-
     ]
     transitions: [
         Transition {
