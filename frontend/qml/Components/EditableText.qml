@@ -3,33 +3,35 @@ import QtQuick 2.4
 Rectangle {
     id: root
 
-    color: "#00000000"
-
-    width: (text_edit.length === 0) ? text_default.contentWidth + 4 : text_edit.contentWidth + 4
-    height: text_content.childrenRect.height + 4
-
-    radius: 2
-
     property alias font: text_main.font
     property alias style: text_main.style
     property alias styleColor: text_main.styleColor
     property alias default_text: text_default.text
     property alias text: text_main.text
     property bool editable: false
+    property int maxWidth: 0
+    property alias horizontalAlignment: text_main.horizontalAlignment
 
     property Item next_item
 
     signal done(string text)
 
+    function setEdit(is) {
+        root.enabled = true
+        root.editable = is
+    }
+
+    color: "#00000000"
+
+    width: maxWidth > 0 ? maxWidth : ((text_edit.length === 0) ? text_default.contentWidth + 4 : text_edit.contentWidth + 4)
+    height: text_content.childrenRect.height + 4
+
+    radius: 2
+
     onEditableChanged: {
         // Save current value
         if( ! editable )
             root.text = text_edit.text
-    }
-
-    function setEdit(is) {
-        root.enabled = true
-        root.editable = is
     }
 
     onFocusChanged: {
@@ -66,10 +68,16 @@ Rectangle {
                 style: text_main.style
                 styleColor: text_main.styleColor
 
+                horizontalAlignment: text_main.horizontalAlignment
+                wrapMode: Text.WordWrap
+                width: root.maxWidth > 0 ? root.maxWidth : contentWidth
+
                 visible: text_edit.length === 0
             }
             Text {
                 id: text_main
+                wrapMode: Text.WordWrap
+                width: root.maxWidth > 0 ? root.maxWidth : contentWidth
             }
 
             TextInput {
@@ -79,7 +87,9 @@ Rectangle {
                 enabled: false
                 focus: root.focus
 
-                width: Math.max(contentWidth, text_default.width)
+                horizontalAlignment: text_main.horizontalAlignment
+                wrapMode: Text.WordWrap
+                width: root.maxWidth > 0 ? root.maxWidth : Math.max(contentWidth, text_default.contentWidth)
                 height: Math.max(contentHeight, text_default.height)
 
                 font: text_main.font

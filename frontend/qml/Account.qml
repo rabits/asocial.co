@@ -8,13 +8,14 @@ Rectangle {
     clip: true
     color: "#ff777777"
 
-    property Profile _main_profile
+    property Profile _master_profile
+
+    property alias move_to: move_to
+    property alias profile_component: profile_component
+    property alias delayed_action: delayed_action
 
     function show(account_id) {
-        if( ! app.openAccount(account_id) ) {
-            console.error("Unable to open account id#" + account_id)
-            return false
-        }
+        A.initDB(account_id)
 
         var main_profile = A.getProfile(1)
 
@@ -26,8 +27,8 @@ Rectangle {
         }
 
         account.visible = true
-        _main_profile = A.createProfileObj(main_profile)
-        _main_profile.master()
+        _master_profile = A.createProfileObj(main_profile)
+        _master_profile.master()
 
         updateSheet()
     }
@@ -50,12 +51,6 @@ Rectangle {
                 minY = minY > sheet.children[c].y ? sheet.children[c].y : minY
             }
         }
-        if( minX != 0 || minY != 0 ) {
-            for( var c in sheet.children ) {
-                sheet.children[c].x -= minX
-                sheet.children[c].y -= minY
-            }
-        }
 
         A.returnToBounds()
     }
@@ -68,27 +63,27 @@ Rectangle {
     property point _prev_pos // Used in inertia animation
     function activateInertia() {
         // TODO: rewrite to infinitie animation
-        var new_x = sheet.x + (sheet.x - _prev_pos.x) * 20 * 100
-        var new_y = sheet.y + (sheet.y - _prev_pos.y) * 20 * 100
+        var new_x = sheet.x + (sheet.x - _prev_pos.x) * 20
+        var new_y = sheet.y + (sheet.y - _prev_pos.y) * 20
         var bound_x = A.getBoundX(new_x)
         var bound_y = A.getBoundY(new_y)
 
-        var duration_x = 100000
-        var duration_y = 100000
+        var duration_x = 1000
+        var duration_y = 1000
 
         var easeing_x = Easing.OutExpo
         var easeing_y = Easing.OutExpo
 
-        if( bound_x !== new_x ) {
-            duration_x = Math.abs(bound_x / new_x) * duration_x
+        if( bound_x !== new_x )
             easeing_x = Easing.OutBack
-        }
-        if( bound_y !== new_y ) {
-            duration_y = Math.abs(bound_y / new_y) * duration_y
+        if( bound_y !== new_y )
             easeing_y = Easing.OutBack
-        }
 
         A.moveViewTo(Qt.point( bound_x, bound_y ), duration_x, duration_y, easeing_x, easeing_y)
+    }
+
+    Component.onCompleted: {
+        A.init(app, account, sheet, visible_area)
     }
 
     Rectangle {
@@ -109,13 +104,6 @@ Rectangle {
             property point _grab_point
             property bool _stealed: true
             property point _push_point
-
-            onClicked: {
-                console.log("Clicked Account")
-                if( mouse.button === Qt.RightButton ) {
-                    moveToCenterOf(Qt.point(sheet.x - mouse.x + visible_area.width/2, sheet.y - mouse.y + visible_area.height/2), sheet.scale)
-                }
-            }
 
             onPressed: {
                 console.log("Pressed Account")
@@ -141,7 +129,7 @@ Rectangle {
                     sheet.x = mouse.x + _grab_point.x
                     sheet.y = mouse.y + _grab_point.y
 
-                    // Release childrens if mouse is far away from the last point
+                    // Release if mouse is far away from the last point
                     if( _stealed !== true ) {
                         if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 ) {
                             _stealed = true
@@ -155,26 +143,28 @@ Rectangle {
                 console.log("Wheel Account")
                 _push_point = Qt.point(wheel.x, wheel.y)
 
-                var scale_factor = ( wheel.angleDelta.y > 0 ) ? 2 : 1/2
+                var target_point = A.convertSheetPointToViewPoint(
+                            A.convertViewPointToSheetPoint(_push_point),
+                            sheet.targetScale((wheel.angleDelta.y > 0 ) ? sheet._target_scale + 1 : sheet._target_scale - 1))
 
-                sheet.x = sheet.x - (_push_point.x - visible_area.width/2) * scale_factor
-                sheet.y = sheet.y - (_push_point.y - visible_area.height/2) * scale_factor
-
-                sheet.scale *= scale_factor
+                moveToCenterOf(Qt.point(sheet.x + visible_area.width/2 - target_point.x, sheet.y + visible_area.height/2 - target_point.y), sheet.targetScale())
             }
 
-            Rectangle {
+            Item {
                 id: sheet
 
-                width: childrenRect.width
-                height: childrenRect.height
-                onWidthChanged: A.returnToBounds()
-                onHeightChanged: A.returnToBounds()
+                property var _available_scales: [0.0625, 0.125, 0.25, 0.5, 1.0, 2.0, 4.0]
+                property int _target_scale: 4
 
-                property int scaledWidth: width * scale
-                property int scaledHeight: height * scale
-                property int scaledX: x + width/2 - (width * scale)/2
-                property int scaledY: y + height/2 - (height * scale)/2
+                function targetScale(index) {
+                    _target_scale = index in _available_scales ? index : _target_scale
+                    return _available_scales[_target_scale]
+                }
+
+                property int scaledWidth: childrenRect.width * targetScale()
+                property int scaledHeight: childrenRect.height * targetScale()
+                property int scaledX: childrenRect.x * targetScale()
+                property int scaledY: childrenRect.y * targetScale()
             }
         }
 
@@ -205,7 +195,6 @@ Rectangle {
                 PropertyAnimation { target: sheet; property: "y"; to: move_to.target_point.y; duration: move_to.duration_y; easing.type: move_to.easing_y }
                 PropertyAnimation { target: sheet; property: "scale"; to: move_to.scale; duration: move_to.duration_scale; easing.type: move_to.easing_scale }
             }
-            //ScriptAction { script: A.returnToBounds() }
         }
     }
 
@@ -234,7 +223,7 @@ Rectangle {
     }
 
     Component {
-        id: profile
+        id: profile_component
         Profile {}
     }
 }

@@ -10,6 +10,8 @@ Item {
     width: 200
     height: 200
 
+    scale: 0.01
+
     property var obj_data
 
     function createConnection(profile_id, pos) {
@@ -25,7 +27,7 @@ Item {
 
     function processConnection(connection) {
         var profile_data = A.getProfile(connection.profile_id)
-        profile_data.data.pos = connection.pos
+        profile_data.pos = connection.pos
         return A.createProfileObj(profile_data)
     }
 
@@ -42,11 +44,15 @@ Item {
         }
     }
 
+    function saveObjData() {
+        P.updateObjData()
+        A.updateProfileData(obj_data)
+    }
+
     function editSwitch() {
         if( root.state.split('_')[0] === "edit" ) {
             root.state = root.state.split('_')[1]
-            P.updateData()
-            A.updateProfileData(obj_data)
+            root.updateData()
         } else {
             root.state = "edit_" + root.state
         }
@@ -54,10 +60,16 @@ Item {
 
     Component.onCompleted: {
         // Set position of profile
-        if( obj_data.data.pos ) {
-            root.x = obj_data.data.pos.x - root.width/2
-            root.y = obj_data.data.pos.y - root.height/2
+        if( obj_data.pos ) {
+            root.x = obj_data.pos.x - root.width/2
+            root.y = obj_data.pos.y - root.height/2
         }
+        born_animation.start()
+    }
+
+    SequentialAnimation {
+        id: born_animation
+        PropertyAnimation { target: root; property: "scale"; to: 1.0; duration: 500; easing.type: Easing.OutBack }
     }
 
     Rectangle {
@@ -65,8 +77,6 @@ Item {
         anchors.fill: parent
         antialiasing: true
         smooth: true
-
-        clip: true
 
         border.width: 1
         border.color: (obj_data.address === "") ? "#aaa" : "#000"
@@ -76,7 +86,8 @@ Item {
 
         Rectangle {
             id: background_highlight
-            anchors.fill: parent
+            width: parent.width
+            height: parent.height
             visible: false
             opacity: 0.2
 
@@ -113,22 +124,38 @@ Item {
             _grab_point = Qt.point(mouse.x, mouse.y)
             background_highlight.visible = true
 
-            // TODO: Fix scaling & position bug
-            A.delayedActionStart(mouse, root.editSwitch)
+            A.delayedActionStart(A.convertSheetPointToViewPoint(Qt.point(mouse.x + root.x, mouse.y + root.y)), root.editSwitch)
         }
 
         onReleased: {
             console.log("Released Profile #" + obj_data.id)
             A.delayedActionStop()
             background_highlight.visible = false
+
+            if( root.state === "" || root.state === "edit_" ) {
+                root.x += background_highlight.x
+                root.y += background_highlight.y
+                background_highlight.x = background_highlight.y = 0
+                obj_data.pos.x = root.x + root.width/2
+                obj_data.pos.y = root.y + root.height/2
+                A.masterProfile().saveObjData()
+            }
         }
 
         onPositionChanged: {
-            // Release childrens if mouse is far away from the last point
+            // Stop delayed action if mouse is far away from the last point
             if( ! _stealed ) {
                 if( Math.abs(_grab_point.x - mouse.x) + Math.abs(_grab_point.y - mouse.y) > 10 ) {
                     _stealed = true
-                    mouse_area.onReleased(mouse)
+                    A.delayedActionStop()
+                }
+            }
+
+            // Drag profile
+            if( mouse.buttons & Qt.LeftButton == 1 ) {
+                if( root.state === "" || root.state === "edit_" ) {
+                    background_highlight.x = mouse.x - _grab_point.x
+                    background_highlight.y = mouse.y - _grab_point.y
                 }
             }
         }
@@ -178,42 +205,25 @@ Item {
         }
 
         EditableText {
-            id: data_first_name
-            anchors {
-                bottom: data_last_name.top
-                horizontalCenter: parent.horizontalCenter
-            }
-
-            font.weight: Font.Bold
-            font.pixelSize: 16
-            style: Text.Outline
-            styleColor: "#fff"
-
-            default_text: qsTr("First Name")
-            enabled: false
-            next_item: data_last_name
-
-            text: obj_data.data.first_name
-        }
-
-        EditableText {
-            id: data_last_name
+            id: data_name
             anchors {
                 bottom: parent.bottom
                 bottomMargin: 50
                 horizontalCenter: parent.horizontalCenter
             }
+            maxWidth: root.width
+            horizontalAlignment: Text.AlignHCenter
 
             font.weight: Font.Bold
             font.pixelSize: 16
             style: Text.Outline
             styleColor: "#fff"
 
-            default_text: qsTr("Last Name")
+            default_text: qsTr("Name")
             enabled: false
             next_item: data_birth_date
 
-            text: obj_data.data.last_name
+            text: obj_data.data.name
         }
 
         EditableText {
@@ -223,7 +233,7 @@ Item {
 
             default_text: qsTr("Birth Date")
             enabled: false
-            next_item: data_first_name
+            next_item: data_name
 
             text: obj_data.data.birth_date
         }
@@ -236,22 +246,19 @@ Item {
             PropertyChanges { target: root; width: 300; height: 400 }
             PropertyChanges { target: avatar_background; width: 200; height: 300; anchors.topMargin: 20 }
             PropertyChanges { target: data_avatar_url; source: obj_data.data.avatar_url }
-            PropertyChanges { target: data_first_name; font.pixelSize: 20 }
+            PropertyChanges { target: data_name; font.pixelSize: 20 }
             PropertyChanges { target: data_birth_date; anchors.topMargin: 60; visible: false }
-            PropertyChanges { target: data_last_name; font.pixelSize: 20; anchors.bottomMargin: 20 }
         },
         State {
             name: "edit_"
-            PropertyChanges { target: data_first_name; enabled: true; editable: true }
-            PropertyChanges { target: data_last_name; enabled: true; editable: true }
+            PropertyChanges { target: data_name; enabled: true; editable: true }
             PropertyChanges { target: data_birth_date; enabled: true; editable: true }
             PropertyChanges { target: background; color: "#0f0" }
         },
         State {
             name: "edit_master"
             extend: "master"
-            PropertyChanges { target: data_first_name; enabled: true; editable: true }
-            PropertyChanges { target: data_last_name; enabled: true; editable: true }
+            PropertyChanges { target: data_name; enabled: true; editable: true }
             PropertyChanges { target: data_birth_date; enabled: true; editable: true; visible: true }
             PropertyChanges { target: background; color: "#0f0" }
         }
