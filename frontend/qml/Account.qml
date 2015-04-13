@@ -107,7 +107,7 @@ Rectangle {
 
             onPressed: {
                 console.log("Pressed Account")
-                move_to.stop()
+                move_to.complete()
                 _push_point = Qt.point(mouse.x, mouse.y)
                 _stealed = false
                 _grab_point = Qt.point(sheet.x - mouse.x, sheet.y - mouse.y)
@@ -175,7 +175,7 @@ Rectangle {
             PropertyChanges { target: horizontal_scrollbar; opacity: 1 }
         }
         transitions: Transition {
-            NumberAnimation { property: "opacity"; from: 0.0; duration: 400 }
+            NumberAnimation { property: "opacity"; from: 0.2; duration: 400 }
             NumberAnimation { property: "opacity"; from: 1.0; duration: 2000; easing.type: Easing.OutCubic }
         }
 
@@ -202,9 +202,10 @@ Rectangle {
         id: horizontal_scrollbar
         width: visible_area.width-12; height: 12
         anchors.bottom: visible_area.bottom
-        opacity: 0
+        opacity: 0.2
+        visible: sheet.scaledWidth > visible_area.width
         orientation: Qt.Horizontal
-        position: - sheet.scaledX / sheet.scaledWidth
+        position: -(sheet.x + sheet.scaledX) / sheet.scaledWidth
         pageSize: visible_area.width / sheet.scaledWidth
     }
 
@@ -212,9 +213,10 @@ Rectangle {
         id: vertical_scrollbar
         width: 12; height: visible_area.height-12
         anchors.right: visible_area.right
-        opacity: 0
+        opacity: 0.2
+        visible: sheet.scaledHeight > visible_area.height
         orientation: Qt.Vertical
-        position: - sheet.scaledY / sheet.scaledHeight
+        position: -(sheet.y + sheet.scaledY) / sheet.scaledHeight
         pageSize: visible_area.height / sheet.scaledHeight
     }
 
