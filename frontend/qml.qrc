@@ -12,5 +12,6 @@
         <file>qml/Components/EditableText.qml</file>
         <file>qml/Components/WaitAction.qml</file>
         <file>qml/js/profile.js</file>
+        <file>qml/Components/EditableInput.qml</file>
     </qresource>
 </RCC>

@@ -52,7 +52,7 @@ Item {
     function editSwitch() {
         if( root.state.split('_')[0] === "edit" ) {
             root.state = root.state.split('_')[1]
-            root.updateData()
+            root.saveObjData()
         } else {
             root.state = "edit_" + root.state
         }
@@ -79,7 +79,7 @@ Item {
         smooth: true
 
         border.width: 1
-        border.color: (obj_data.address === "") ? "#aaa" : "#000"
+        border.color: (obj_data.address === "") ? "#fff" : "#000"
 
         radius: background.width/2
         color: (obj_data.address === "") ? "#33ffffff" : "#dcffffff"
@@ -204,7 +204,7 @@ Item {
             }
         }
 
-        EditableText {
+        EditableInput {
             id: data_name
             anchors {
                 bottom: parent.bottom
@@ -226,7 +226,7 @@ Item {
             text: obj_data.data.name
         }
 
-        EditableText {
+        EditableInput {
             id: data_birth_date
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: avatar_background.bottom
@@ -235,7 +235,9 @@ Item {
             enabled: false
             next_item: data_name
 
-            text: obj_data.data.birth_date
+            inputMask: "99/99/9999"
+
+            text: obj_data.data.birth_date ? Qt.formatDateTime(new Date(obj_data.data.birth_date*1000), "dd/MM/yyyy") : ""
         }
     }
 

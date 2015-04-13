@@ -1,15 +1,12 @@
 import QtQuick 2.4
+import "../js/markdown.lib.js" as MD
 
 Rectangle {
     id: root
 
     property alias font: text_main.font
-    property alias style: text_main.style
-    property alias styleColor: text_main.styleColor
-    property alias default_text: text_default.text
-    property alias text: text_main.text
+    property string text: ""
     property bool editable: false
-    property int maxWidth: 0
     property alias horizontalAlignment: text_main.horizontalAlignment
 
     property Item next_item
@@ -20,13 +17,6 @@ Rectangle {
         root.enabled = true
         root.editable = is
     }
-
-    color: "#00000000"
-
-    width: maxWidth > 0 ? maxWidth : ((text_edit.length === 0) ? text_default.contentWidth + 4 : text_edit.contentWidth + 4)
-    height: text_content.childrenRect.height + 4
-
-    radius: 2
 
     onEditableChanged: {
         // Save current value
@@ -39,68 +29,207 @@ Rectangle {
             text_edit.focus = true
     }
 
+    radius: 2
+    color: "#00000000"
+    clip: true
+
     MouseArea {
+        id: mouse_area
         anchors.fill: parent
         hoverEnabled: true
 
-        cursorShape: Qt.IBeamCursor
+        cursorShape: (root.editable || text_main.selectByMouse) ? Qt.IBeamCursor : Qt.ArrowCursor
 
+        onWheel: {
+            console.log("Wheel TextEdit")
+        }
         onEntered: {
             root.border.width = 1
+            tool_panel.show()
         }
         onExited: {
             root.border.width = 0
+            tool_panel.show()
         }
 
-        Rectangle {
+        Flickable {
             id: text_content
+            pressDelay: 500
             anchors {
-                left: parent.left
-                top: parent.top
+                fill: parent
                 margins: 2
             }
+            contentWidth: text_main.visible ? text_main.width : text_edit.width
+            contentHeight: text_main.visible ? text_main.contentHeight : text_edit.contentHeight
 
-            Text {
-                id: text_default
-
-                color: '#aaa'
-                font: text_main.font
-                style: text_main.style
-                styleColor: text_main.styleColor
-
-                horizontalAlignment: text_main.horizontalAlignment
-                wrapMode: Text.WordWrap
-                width: root.maxWidth > 0 ? root.maxWidth : contentWidth
-
-                visible: text_edit.length === 0
-            }
-            Text {
+            TextEdit {
                 id: text_main
+                //anchors.fill: parent
+                width: text_content.width
+                clip: true
+                //selectByMouse: true
+
+                readOnly: true
+                textFormat: Text.RichText
+                horizontalAlignment: Text.AlignJustify
+
                 wrapMode: Text.WordWrap
-                width: root.maxWidth > 0 ? root.maxWidth : contentWidth
+                text: MD.makeHtml(text_edit.text)
+                onLinkActivated: Qt.openUrlExternally(link)
+                onLinkHovered: mouse_area.cursorShape = link ? Qt.PointingHandCursor : (selectByMouse ? Qt.IBeamCursor : Qt.ArrowCursor)
             }
 
-            TextInput {
+            TextEdit {
                 id: text_edit
+                anchors.fill: parent
+
                 selectByMouse: true
                 visible: false
                 enabled: false
                 focus: root.focus
+                text: root.text
 
                 horizontalAlignment: text_main.horizontalAlignment
-                wrapMode: Text.WordWrap
-                width: root.maxWidth > 0 ? root.maxWidth : Math.max(contentWidth, text_default.contentWidth)
-                height: Math.max(contentHeight, text_default.height)
+                //wrapMode: text_main.wrapMode
+                //font: text_main.font
+                font.family: "monospace"
+            }
 
-                font: text_main.font
-                text: text_main.text
+            states: State {
+                name: "ShowBars"
+                when: text_content.flicking
+                PropertyChanges { target: vertical_scrollbar; opacity: 1 }
+            }
+            transitions: Transition {
+                NumberAnimation { property: "opacity"; from: 0.2; duration: 400 }
+                NumberAnimation { property: "opacity"; from: 1.0; duration: 2000; easing.type: Easing.OutCubic }
+            }
+        }
 
-                onAccepted: {
-                    text_main.text = text_edit.text
-                    done(text_edit.text)
-                    next_item.focus = true
+        ScrollBar {
+            id: vertical_scrollbar
+            width: 12; height: text_content.height
+            anchors.right: text_content.right
+            opacity: 0.2
+            orientation: Qt.Vertical
+            position: text_content.contentY / text_content.contentHeight
+            pageSize: text_content.height / text_content.contentHeight
+        }
+
+        Rectangle {
+            id: tool_panel
+            anchors {
+                top: parent.top
+                right: parent.right
+            }
+
+            function show() {
+                tool_panel.opacity = 1.0
+                tool_panel.enabled = true
+                tool_hide_timer.start()
+            }
+
+            function hide() {
+                tool_panel.opacity = 0.0
+                tool_panel.enabled = false
+            }
+
+            width: 30
+            height: tool_column_view.height + 10
+
+            color: "#55000000"
+
+            Behavior on opacity {
+                NumberAnimation { duration: 500 }
+            }
+
+            Column {
+                id: tool_column_view
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                    right: parent.right
+                    margins: 5
                 }
-                KeyNavigation.tab: next_item
+
+                Button {
+                    id: button_edit
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    width: 20
+                    height: 20
+                    color: "#595"
+
+                    caption: qsTr("E")
+
+                    onClicked: {
+                        root.editable = true
+                    }
+                }
+            }
+
+            Column {
+                id: tool_column_edit
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                    right: parent.right
+                    margins: 5
+                }
+
+                visible: false
+
+                Button {
+                    id: button_close
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    width: 20
+                    height: 20
+                    color: "#955"
+
+                    caption: qsTr("X")
+
+                    onClicked: {
+                        text_edit.text = root.text
+                        root.editable = false
+                    }
+                }
+
+                Button {
+                    id: button_save
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    width: 20
+                    height: 20
+                    color: "#595"
+
+                    caption: qsTr("S")
+
+                    onClicked: {
+                        root.text = text_edit.text
+                    }
+                }
+            }
+
+            states: [
+                State {
+                    name: "edit"
+                    when: root.editable
+                    PropertyChanges { target: tool_panel; height: tool_column_edit.height + 10 }
+                    PropertyChanges { target: tool_column_view; visible: false }
+                    PropertyChanges { target: tool_column_edit; visible: true }
+                }
+            ]
+
+            Timer {
+                id: tool_hide_timer
+                repeat: false
+                running: false
+                interval: 5000
+
+                onTriggered: {
+                    tool_panel.hide()
+                }
             }
         }
     }

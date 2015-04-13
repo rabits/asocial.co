@@ -94,7 +94,7 @@ function emptyProfileData() {
     return {
         id: null,
         address: '',
-        data: {name: '', birth_date: '', avatar_url: '', avatar_url_eq: ''},
+        data: {name: '', birth_date: null, avatar_url: '', avatar_url_eq: ''},
         overlay: {},
         description: ''
     }

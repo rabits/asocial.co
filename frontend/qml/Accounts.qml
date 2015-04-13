@@ -85,7 +85,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 3
 
-                    EditableText {
+                    EditableInput {
                         id: text_name
                         font.weight: Font.Bold
                         text: id >= 0 ? name : ''
@@ -94,7 +94,7 @@ Rectangle {
 
                         next_item: text_description
                     }
-                    EditableText {
+                    EditableInput {
                         id: text_description
                         text: id >= 0 ? description : ''
                         default_text: description
