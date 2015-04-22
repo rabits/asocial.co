@@ -101,11 +101,17 @@ Item {
         id: mouse_area
         anchors.fill: parent
         hoverEnabled: true
+        preventStealing: true
 
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
         property point _grab_point
         property bool _stealed: true
+
+        onClicked: {
+            console.log("Clicked Profile #" + obj_data.id)
+            A.sheetItemTop(root)
+        }
 
         onPressed: {
             console.log("PrePressed Profile #" + obj_data.id)
@@ -158,6 +164,11 @@ Item {
                     background_highlight.y = mouse.y - _grab_point.y
                 }
             }
+        }
+
+        onWheel: {
+            console.log("Wheel Profile #" + obj_data.id)
+            A.sheetScaleTo(wheel.angleDelta.y, Qt.point(root.x + wheel.x, root.y + wheel.y))
         }
 
         Rectangle {

@@ -26,69 +26,9 @@ function initDB(account_id) {
     _db = app.getCurrentAccount()
 }
 
-function moveViewTo(target_point, duration_x, duration_y, easing_x, easing_y, scale, duration_scale, easing_scale) {
-    _a.move_to.stop()
-
-    _a.move_to.target_point = target_point
-    _a.move_to.duration_x = duration_x !== undefined ? duration_x : 1000
-    _a.move_to.duration_y = duration_y !== undefined ? duration_y : 1000
-    _a.move_to.easing_x = easing_x !== undefined ? easing_x : 22 // Easing.OutExpo
-    _a.move_to.easing_y = easing_y !== undefined ? easing_y : 22 // Easing.OutExpo
-    _a.move_to.scale = scale !== undefined ? scale : _s.scale
-    _a.move_to.duration_scale = duration_scale !== undefined ? duration_scale : 1000
-    _a.move_to.easing_scale = easing_scale !== undefined ? easing_scale : 22 // Easing.OutExpo
-
-    _a.move_to.start()
-}
-
-function returnToBounds() {
-    moveViewTo(Qt.point( getBoundX(_s.x), getBoundY(_s.y) ), 500, 500)
-}
-
-function getBoundX(x, mulscale) {
-    mulscale = mulscale ? mulscale : 1
-    if( _s.scaledWidth*mulscale > _va.width ) {
-        var leftbound = - _s.scaledX*mulscale
-        if( x > leftbound )
-            return leftbound
-        var rightbound = _va.width - _s.scaledX*mulscale - _s.scaledWidth*mulscale
-        if( x < rightbound )
-            return rightbound
-    } else
-        return _va.width/2 - (_s.scaledX*mulscale + _s.scaledWidth*mulscale/2)
-
-    return x
-}
-function getBoundY(y, mulscale) {
-    mulscale = mulscale ? mulscale : 1
-    if( _s.scaledHeight*mulscale > _va.height ) {
-        var topbound = - _s.scaledY*mulscale
-        if( y > topbound )
-            return topbound
-        var bottombound = _va.height - _s.scaledY*mulscale - _s.scaledHeight*mulscale
-        if( y < bottombound )
-            return bottombound
-    } else
-        return _va.height/2 - (_s.scaledY*mulscale + _s.scaledHeight*mulscale/2)
-
-    return y
-}
-
-function convertViewPointToSheetPoint(point, scale) {
-    scale = scale ? scale : _s.scale
-    return {
-        x: (point.x - _s.x) / scale,
-        y: (point.y - _s.y) / scale
-    }
-}
-
-function convertSheetPointToViewPoint(point, scale) {
-    scale = scale ? scale : _s.scale
-    return {
-        x: point.x * scale + _s.x,
-        y: point.y * scale + _s.y
-    }
-}
+/**
+ * DB Operations
+**/
 
 function emptyProfileData() {
     return {
@@ -116,7 +56,9 @@ function createAddress() {
     return _db.createAddress()
 }
 
-
+/**
+ * Sheet Objects Operations
+**/
 
 function createProfileObj(profile_data) {
     console.log("Create profile object")
@@ -130,7 +72,6 @@ function createProfileObj(profile_data) {
 function createNewProfileObj(pos) {
     console.log("Create new profile object")
 
-    pos = convertViewPointToSheetPoint(pos)
     var profile_id = createProfile(emptyProfileData())
     var obj = _a._master_profile.createConnection(profile_id, pos)
 
@@ -141,9 +82,59 @@ function masterProfile() {
     return _a._master_profile
 }
 
-function delayedActionStart(pos, slot) {
+/**
+ * Sheet Move Operations
+**/
+
+var _top_sheet_index = 0
+function sheetItemTop(item) {
+    item.z = ++_top_sheet_index
+}
+
+function convertViewPointToSheetPoint(point, scale) {
+    scale = scale ? scale : _s.scale
+    return {
+        x: (point.x + _va.contentX) / scale,
+        y: (point.y + _va.contentY) / scale
+    }
+}
+
+function convertSheetPointToViewPoint(point, scale) {
+    scale = scale ? scale : _s.scale
+    return {
+        x: point.x * scale - _va.contentX,
+        y: point.y * scale - _va.contentY
+    }
+}
+
+function sheetMoveTo(target_point, duration_x, duration_y) {
+    _a.move_to.stop()
+
+    _a.move_to.target_point = target_point
+    _a.move_to.duration_x = duration_x ? duration_x : 1000
+    _a.move_to.duration_y = duration_y ? duration_y : 1000
+
+    _a.move_to.start()
+}
+
+function sheetCenterViewTo(point, duration_x, duration_y) {
+    sheetMoveTo(Qt.point(_va.contentX + point.x - _va.width/2,
+                         _va.contentY + point.y - _va.height/2),
+                duration_x, duration_y)
+}
+
+function sheetScaleTo(vector, point) {
+    var target_point = convertSheetPointToViewPoint(point, _s.targetScale((vector > 0 ) ? _s._target_scale + 1 : _s._target_scale - 1))
+    sheetCenterViewTo(target_point)
+}
+
+/**
+ * Account Delayed Action
+**/
+
+function delayedActionStart(view_pos, slot) {
     delayedActionStop()
-    _a.delayed_action.start(pos, slot)
+    _a.delayed_action.start(view_pos, slot)
 }
 
 function delayedActionStop() {

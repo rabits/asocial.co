@@ -11,6 +11,7 @@
 #include <QtSql/QSqlQuery>
 #include <QtSql/QSqlError>
 #include <QJsonDocument>
+#include <QDateTime>
 
 AccountDatabase::AccountDatabase(QObject *parent, QString name, QString path)
     : SqlDatabase(parent, name, path)
@@ -46,7 +47,8 @@ int AccountDatabase::createProfile(const QJsonObject &profile)
     qDebug("Creating new profile");
 
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO profiles (address, data, overlay, description) VALUES (:address, :data, :overlay, :description)");
+    query.prepare("INSERT INTO profiles (date, address, data, overlay, description) VALUES (:date, :address, :data, :overlay, :description)");
+    query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
     query.bindValue(":address", profile.value("address").toString());
     query.bindValue(":data", QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact));
     query.bindValue(":overlay", QJsonDocument(profile.value("overlay").toObject()).toJson(QJsonDocument::Compact));
@@ -65,13 +67,14 @@ QJsonObject AccountDatabase::getProfile(const int id)
     QSqlQuery query(m_db);
     QJsonObject out;
 
-    query.prepare("SELECT rowid as id, address, data, overlay, description FROM profiles WHERE rowid = :id LIMIT 1");
+    query.prepare("SELECT rowid as id, date, address, data, overlay, description FROM profiles WHERE rowid = :id LIMIT 1");
     query.bindValue(":id", id);
 
     if( ! query.exec() ) {
         qCritical() << query.lastError();
     } else if( query.next() ) {
         out["id"] = query.value("id").toInt();
+        out["date"] = query.value("date").toLongLong();
         out["address"] = query.value("address").toString();
         out["data"] = QJsonDocument::fromJson(query.value("data").toByteArray()).object();
         out["overlay"] = QJsonDocument::fromJson(query.value("overlay").toByteArray()).object();
@@ -89,8 +92,9 @@ bool AccountDatabase::updateProfileData(const QJsonObject &profile)
 
     QSqlQuery query(m_db);
 
-    query.prepare("UPDATE profiles SET data = :data WHERE rowid = :id");
+    query.prepare("UPDATE profiles SET date = :date, data = :data WHERE rowid = :id");
     query.bindValue(":id", profile.value("id").toInt());
+    query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
     query.bindValue(":data", QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact));
 
     if( ! query.exec() ) {
@@ -191,18 +195,20 @@ void AccountDatabase::upgrade(const long from_version)
                   << "description text");
 
             table("devices", QStringList()
+                  << "date integer not null"    // Last update date
                   << "name text not null"       // Name of device
                   << "address text not null"    // Bitcoin device address
                   << "data text not null"       // Json with device key id, picture etc
                   << "description text");       // Description for device
 
             table("profiles", QStringList()     // Contains profiles of users
-                  << "address text not null"
+                  << "date integer not null"    // Last update date
+                  << "address text not null"    // Bitcoin account address
                   << "data text not null"       // Json with profile data
                   << "overlay text not null"    // Json overlay profile data
                   << "description text not null");
 
-            table("history", QStringList()      // History of profiles / links changes
+            table("profiles_history", QStringList() // History of profiles
                   << "date integer not null"    // Change date
                   << "data text not null"       // Changed data
                   << "description text");       // Description of change
@@ -212,6 +218,7 @@ void AccountDatabase::upgrade(const long from_version)
             query.exec("INSERT INTO media_type (name) VALUES ('image'), ('audio'), ('video'), ('file')");
 
             table("storage_metadata", QStringList()
+                  << "date integer not null"    // Last update date
                   << "type int not null"        // Type of media
                   << "owner_id int not null"    // Data owner
                   << "url text not null"        // URL to find media

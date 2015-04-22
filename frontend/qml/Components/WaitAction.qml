@@ -5,18 +5,18 @@ Rectangle {
     visible: false
     opacity: 0.0
 
-    property point _pos
+    property point _view_pos
     property var _current_slot: null
 
-    signal run(point pos)
+    signal run(point view_pos)
 
-    function start(pos, slot) {
-        _pos = Qt.point(pos.x, pos.y)
+    function start(view_pos, slot) {
+        _view_pos = Qt.point(view_pos.x, view_pos.y)
         _current_slot = slot
 
         root.run.connect(_current_slot)
-        root.x = pos.x - root.radius
-        root.y = pos.y - root.radius
+        root.x = view_pos.x - root.radius
+        root.y = view_pos.y - root.radius
         root.visible = true
 
         arrow_animation.start()
@@ -47,7 +47,7 @@ Rectangle {
             id: arrow_animation
             running: false
             RotationAnimation { from: 0; to: 360; duration: 1000 }
-            ScriptAction { script: root.run(root._pos) }
+            ScriptAction { script: root.run(root._view_pos) }
             ScriptAction { script: root.stop() }
         }
     }

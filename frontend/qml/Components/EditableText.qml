@@ -54,7 +54,7 @@ Rectangle {
 
         Flickable {
             id: text_content
-            pressDelay: 500
+            pressDelay: 300
             anchors {
                 fill: parent
                 margins: 2
