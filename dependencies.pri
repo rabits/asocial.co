@@ -4,6 +4,3 @@ for(dep, DEPENDENCY_LIBRARIES) {
     LIBS += ../$${dep}/libasc$${dep}.a
     PRE_TARGETDEPS += ../$${dep}/libasc$${dep}.a
 }
-
-DISTFILES += \
-    $$PWD/frontend/qml/Components/EditableText.qml

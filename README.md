@@ -2,7 +2,7 @@ aSocial
 =======
 [![Build Status](https://drone.io/github.com/rabits/asocial.co/status.png)](https://drone.io/github.com/rabits/asocial.co/latest)
 
-OpenSource crossplatform disturbed social network.
+OpenSource crossplatform distributed social network.
 
 About
 -----
