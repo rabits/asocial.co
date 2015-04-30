@@ -111,6 +111,7 @@ Item {
         onClicked: {
             console.log("Clicked Profile #" + obj_data.id)
             A.sheetItemTop(root)
+            line_of_life.setProfile(root)
         }
 
         onPressed: {

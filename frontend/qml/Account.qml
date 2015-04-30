@@ -31,6 +31,8 @@ Rectangle {
         _master_profile.master()
 
         updateSheet()
+
+        line_of_life.setProfile(_master_profile)
     }
     function hide() {
         account.visible = false
@@ -184,9 +186,25 @@ Rectangle {
         id: delayed_action
     }
 
+    LineOfLife {
+        id: line_of_life
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+            leftMargin: 50
+            rightMargin: 50
+            bottomMargin: 20
+        }
+        height: parent.height / 10
+    }
+
+    ShowText {
+        id: show_text
+    }
+
     Component {
         id: profile_component
         Profile {}
     }
 }
-
