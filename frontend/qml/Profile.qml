@@ -249,7 +249,7 @@ Item {
 
             inputMask: "99/99/9999"
 
-            text: obj_data.data.birth_date ? Qt.formatDateTime(new Date(obj_data.data.birth_date*1000), "dd/MM/yyyy") : ""
+            text: obj_data.data.birth_date ? wdate.format(obj_data.data.birth_date*1000, "dd/MM/yyyy") : ""
         }
     }
 

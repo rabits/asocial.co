@@ -14,6 +14,7 @@ class PrivKey;
 class Backend;
 class FEDatabase;
 class AccountDatabase;
+class WDate;
 
 class Frontend
     : public QObject
@@ -74,6 +75,8 @@ private:
     PrivKey         *m_device_passkey;
     Backend         *m_backend;
     FEDatabase      *m_database;
+
+    WDate           *m_date_wrapper;
 };
 
 #endif // FRONTEND_H

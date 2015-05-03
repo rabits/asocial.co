@@ -8,27 +8,37 @@ Rectangle {
 
     function setTo(pos, unixtime) {
         root.x = pos
-        root.text = Qt.formatDateTime(new Date(unixtime*1000), "dd/MM/yyyy hh:mm:ss")
+        root.text = wdate.format(unixtime*1000, "dd/MM/yyyy hh:mm:ss")
     }
 
     property alias text: cursor_text.text
 
-    Text {
-        id: cursor_text
+    Rectangle {
+        id: text_background
         anchors {
             left: parent.right
             bottom: parent.bottom
             margins: 1
         }
 
-        font.pixelSize: root.height / 6
-        font.family: "monospaced"
+        radius: 2 * screenScale
+        color: "#88ffffff"
+
+        width: cursor_text.contentWidth
+        height: cursor_text.contentHeight
+
+        Text {
+            id: cursor_text
+
+            font.pixelSize: root.height / 6
+            font.family: "monospaced"
+        }
 
         states: State {
             name: "left"
-            when: root.x + cursor_text.contentWidth - visible_area.contentX > visible_area.width - axis_background.anchors.leftMargin
+            when: root.x + cursor_text.contentWidth > axis_mouse_area.width
             AnchorChanges {
-                target: cursor_text
+                target: text_background
                 anchors.left: undefined
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom

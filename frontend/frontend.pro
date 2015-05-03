@@ -12,7 +12,8 @@ SOURCES += \
     src/fedatabase.cpp \
     src/accountdatabase.cpp \
     src/storage/internalimageprovider.cpp \
-    src/storage/internalstorage.cpp
+    src/storage/internalstorage.cpp \
+    src/wdate.cpp
 
 RESOURCES += \
     qml.qrc
@@ -22,7 +23,8 @@ HEADERS += \
     src/fedatabase.h \
     src/accountdatabase.h \
     src/storage/internalimageprovider.h \
-    src/storage/internalstorage.h
+    src/storage/internalstorage.h \
+    src/wdate.h
 
 OTHER_FILES += \
     scripts/asocial

@@ -1,6 +1,7 @@
 #include "frontend/frontend.h"
 
 #include "fedatabase.h"
+#include "wdate.h"
 
 #include <QDebug>
 #include <QGuiApplication>
@@ -56,6 +57,7 @@ Frontend::~Frontend()
     Settings::destroyI();
     delete m_translator;
     delete m_engine;
+    delete m_date_wrapper;
     qDebug("Destroy Frontend");
 }
 
@@ -65,6 +67,8 @@ void Frontend::init(QGuiApplication *app)
 
     m_app = app;
     connect(app, SIGNAL(aboutToQuit()), this, SLOT(deleteMe()));
+
+    m_date_wrapper = new WDate();
 
     initInterface();
     initLocale();
@@ -83,9 +87,11 @@ void Frontend::initInterface()
 
     m_context->setContextProperty("app", this);
     m_context->setContextProperty("settings", Settings::I());
+    m_context->setContextProperty("wdate", m_date_wrapper);
     m_context->setContextProperty("screenScale",
                                   QGuiApplication::primaryScreen()->physicalDotsPerInch() * QGuiApplication::primaryScreen()->devicePixelRatio() / 100);
 
+    qmlRegisterUncreatableType<WDate>("co.asocial", 1, 0, "WDate", "External type");
     qmlRegisterUncreatableType<AccountDatabase>("co.asocial", 1, 0, "AccountDatabase", "External type");
 
     m_engine->addImageProvider(QLatin1String("InternalStorage"), new InternalImageProvider);

@@ -10,7 +10,7 @@ Rectangle {
     color: "#000000"
 
     property string format: "dd/MM/yyyy"
-    property int unixtime
+    property var unixtime
 
     Text {
         id: cursor_text
@@ -20,7 +20,7 @@ Rectangle {
             margins: 1
         }
 
-        text: Qt.formatDateTime(new Date((unixtime !== undefined ? unixtime : L.pointToTime(root.x)) * 1000), root.format)
+        text: wdate.format((unixtime !== undefined ? unixtime : L.pointToTime(root.x)) * 1000, root.format)
 
         font.pixelSize: root.height / 4
         font.family: "monospaced"
