@@ -38,7 +38,7 @@ public slots:
     qint64 currentUnixtime();
 
     bool checkFormat(QString datetime, QString format);
-    qint64 unixtimeFromString(QString datetime, QString format);
+    qint64 unixtimeFromString(QString datetime, QString format, bool in_utc);
 };
 
 #endif // WDATE_H

@@ -6,12 +6,12 @@ Rectangle {
     width: 1
     color: "#000000"
 
-    function setTo(pos, unixtime) {
-        root.x = pos
-        root.text = wdate.format(unixtime*1000, "dd/MM/yyyy hh:mm:ss")
+    function setTo(unixtime) {
+        root.unixtime = unixtime
     }
 
     property alias text: cursor_text.text
+    property var unixtime
 
     Rectangle {
         id: text_background
@@ -29,6 +29,8 @@ Rectangle {
 
         Text {
             id: cursor_text
+
+            text: wdate.format(unixtime*1000, "dd/MM/yyyy hh:mm:ss")
 
             font.pixelSize: root.height / 6
             font.family: "monospaced"

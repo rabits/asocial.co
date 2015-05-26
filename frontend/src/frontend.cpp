@@ -218,6 +218,14 @@ AccountDatabase* Frontend::getCurrentAccount()
     return m_database->getCurrentAccount();
 }
 
+QColor Frontend::getTextColor(QColor background_color)
+{
+    if( 0.2126 * background_color.redF() + 0.7152 * background_color.greenF() + 0.0722 * background_color.blueF() > 0.5 )
+        return QColor(Qt::black);
+    else
+        return QColor(Qt::white);
+}
+
 void Frontend::responsePassword(const QString password)
 {
     m_password = password;

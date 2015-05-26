@@ -2,15 +2,16 @@
 
 #include <QDebug>
 #include <QDateTime>
+#include <QTimeZone>
 
 WDate::WDate(QObject *parent) : QObject(parent)
 {
-
+    qDebug() << "Create WDate date wrapper";
 }
 
 WDate::~WDate()
 {
-
+    qDebug() << "Destroy WDate date wrapper";
 }
 
 QList<QVariant> WDate::getAxisMarks(WDate::DETAIL detail, qint64 munixtime_from, qint64 munixtime_interval)
@@ -19,7 +20,7 @@ QList<QVariant> WDate::getAxisMarks(WDate::DETAIL detail, qint64 munixtime_from,
 
     QDateTime dt = QDateTime::fromMSecsSinceEpoch(munixtime_from);
     QDate d = dt.date();
-    QTime t = dt.time();
+    QTime t = QTime::currentTime();
 
     // Resetting date & time basing on the detail level
     if( detail > WDate::MONTH )
@@ -29,8 +30,9 @@ QList<QVariant> WDate::getAxisMarks(WDate::DETAIL detail, qint64 munixtime_from,
     if( detail > WDate::HOUR )
         t.setHMS(0, 0, 0);
     else
-        t.setHMS(t.hour(), 0, 0);
+        t.setHMS(dt.time().hour(), 0, 0);
 
+    dt = QDateTime::currentDateTime();
     dt.setDate(d);
     dt.setTime(t);
 
@@ -39,6 +41,10 @@ QList<QVariant> WDate::getAxisMarks(WDate::DETAIL detail, qint64 munixtime_from,
     qint64 to = munixtime_from + munixtime_interval;
     while( true ) {
         ut = dt.toMSecsSinceEpoch();
+
+        if( detail != WDate::HOUR && dt.time().hour() != 0 ) {
+            dt.setTime(t); // Fix for switching to summer time
+        }
 
         if( detail == WDate::YEAR )
             dt = dt.addYears(1);
@@ -99,7 +105,10 @@ bool WDate::checkFormat(QString datetime, QString format)
     return QDateTime::fromString(datetime, format).isValid();
 }
 
-qint64 WDate::unixtimeFromString(QString datetime, QString format)
+qint64 WDate::unixtimeFromString(QString datetime, QString format, bool in_utc)
 {
-    return QDateTime::fromString(datetime, format).toMSecsSinceEpoch() / 1000;
+    QDateTime dt = QDateTime::fromString(datetime, format);
+    if( in_utc )
+        dt.setTimeSpec(Qt::UTC);
+    return dt.toMSecsSinceEpoch() / 1000;
 }

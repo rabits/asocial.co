@@ -151,10 +151,12 @@ Item {
 
         onPositionChanged: {
             // Stop delayed action if mouse is far away from the last point
-            if( ! _stealed ) {
-                if( Math.abs(_grab_point.x - mouse.x) + Math.abs(_grab_point.y - mouse.y) > 10 ) {
-                    _stealed = true
-                    A.delayedActionStop()
+            if( pressed ) {
+                if( ! _stealed ) {
+                    if( Math.abs(_grab_point.x - mouse.x) + Math.abs(_grab_point.y - mouse.y) > 10 ) {
+                        _stealed = true
+                        A.delayedActionStop()
+                    }
                 }
             }
 
@@ -245,11 +247,25 @@ Item {
 
             default_text: qsTr("Birth Date")
             enabled: false
+            next_item: data_death_date
+
+            inputMask: "99/99/9999"
+
+            text: obj_data.data.birth_date !== null  ? wdate.format(obj_data.data.birth_date*1000, "dd/MM/yyyy") : ""
+        }
+
+        EditableInput {
+            id: data_death_date
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: data_birth_date.bottom
+
+            default_text: qsTr("Death Date")
+            enabled: false
             next_item: data_name
 
             inputMask: "99/99/9999"
 
-            text: obj_data.data.birth_date ? wdate.format(obj_data.data.birth_date*1000, "dd/MM/yyyy") : ""
+            text: obj_data.data.death_date !== null ? wdate.format(obj_data.data.death_date*1000, "dd/MM/yyyy") : ""
         }
     }
 
@@ -261,12 +277,13 @@ Item {
             PropertyChanges { target: avatar_background; width: 200; height: 300; anchors.topMargin: 20 }
             PropertyChanges { target: data_avatar_url; source: obj_data.data.avatar_url }
             PropertyChanges { target: data_name; font.pixelSize: 20 }
-            PropertyChanges { target: data_birth_date; anchors.topMargin: 60; visible: false }
+            PropertyChanges { target: data_birth_date; anchors.topMargin: 40; visible: false }
         },
         State {
             name: "edit_"
             PropertyChanges { target: data_name; enabled: true; editable: true }
             PropertyChanges { target: data_birth_date; enabled: true; editable: true }
+            PropertyChanges { target: data_death_date; enabled: true; editable: true }
             PropertyChanges { target: background; color: "#0f0" }
         },
         State {
@@ -274,6 +291,7 @@ Item {
             extend: "master"
             PropertyChanges { target: data_name; enabled: true; editable: true }
             PropertyChanges { target: data_birth_date; enabled: true; editable: true; visible: true }
+            PropertyChanges { target: data_death_date; enabled: true; editable: true; visible: true }
             PropertyChanges { target: background; color: "#0f0" }
         }
     ]

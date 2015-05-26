@@ -78,9 +78,9 @@ Rectangle {
 
             onPressed: {
                 console.log("Pressed Account")
+
                 _push_point = Qt.point(mouse.x, mouse.y)
                 _stealed = false
-
                 A.delayedActionStart(mouse, mouse_area.createNewProfileObjWrapper)
             }
             onReleased: {
@@ -89,7 +89,7 @@ Rectangle {
             }
 
             onPositionChanged: {
-                if( mouse.buttons & Qt.LeftButton == 1 ) {
+                if( pressed ) {
                     // Release if mouse is far away from the last point
                     if( _stealed !== true ) {
                         if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 ) {

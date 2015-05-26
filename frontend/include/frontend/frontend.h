@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QColor>
 
 class QGuiApplication;
 class QQmlApplicationEngine;
@@ -38,6 +39,8 @@ public:
     Q_INVOKABLE void closeAccount();
 
     Q_INVOKABLE AccountDatabase* getCurrentAccount();
+
+    Q_INVOKABLE QColor getTextColor(QColor background_color);
 
 signals:
     void postinitDone();

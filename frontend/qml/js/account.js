@@ -34,8 +34,9 @@ function emptyProfileData() {
     return {
         id: null,
         address: '',
-        data: {name: '', birth_date: null, avatar_url: '', avatar_url_eq: ''},
+        data: {name: '', birth_date: null, death_date: null, avatar_url: '', avatar_url_eq: ''},
         overlay: {},
+        events: [],
         description: ''
     }
 }
@@ -140,3 +141,7 @@ function delayedActionStart(view_pos, slot) {
 function delayedActionStop() {
     _a.delayed_action.stop()
 }
+
+/**
+ * Account show/create text
+**/

@@ -19,6 +19,7 @@
         <file>qml/Components/LineOfLife.qml</file>
         <file>qml/js/lineoflife.js</file>
         <file>qml/Components/LineOfLife/AxisCursor.qml</file>
-        <file>qml/Components/LineOfLife/DateMark.qml</file>
+        <file>qml/Components/LineOfLife/AxisMark.qml</file>
+        <file>qml/Components/LineOfLife/EventMark.qml</file>
     </qresource>
 </RCC>
