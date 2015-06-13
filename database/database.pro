@@ -15,3 +15,7 @@ SOURCES += \
 
 include(lib/leveldb.pri)
 include(lib/qsqlcipher/qsql_sqlcipher.pri)
+
+android {
+    INCLUDEPATH += $$OUT_PWD/../openssl/include
+}

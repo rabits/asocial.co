@@ -16,7 +16,6 @@ SOURCES += \
 
 include(lib/simpleqtcryptor/simpleqtcryptor.pri)
 
-unix {
-    CONFIG += link_pkgconfig
-    PKGCONFIG += libssl libcrypto
+android {
+    INCLUDEPATH += $$OUT_PWD/../openssl/include
 }

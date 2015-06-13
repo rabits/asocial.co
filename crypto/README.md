@@ -21,7 +21,7 @@ Is based on the bitcoin implementation of keys & addresses for profile.
 
 Requirements
 ------------
-* OpenSSL: libss, libcrypt
+* OpenSSL: libssl, libcrypt
 Android procedure: http://qt-project.org/doc/qt-5/opensslsupport.html
 
 Support:

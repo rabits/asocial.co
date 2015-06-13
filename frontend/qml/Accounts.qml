@@ -24,14 +24,14 @@ Rectangle {
 
     Text {
         anchors.fill: parent
-        anchors.margins: 2
+        anchors.margins: 2 * screenScale
 
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 
         fontSizeMode: Text.Fit
-        minimumPixelSize: 10
-        font.pixelSize: 72
+        minimumPixelSize: 10 * screenScale
+        font.pixelSize: 72 * screenScale
         font.weight: Font.Bold
         color: "#ccffffff"
 
@@ -41,16 +41,16 @@ Rectangle {
     ListView {
         id: list
         anchors.fill: parent
-        anchors.margins: 20
+        anchors.margins: 20 * screenScale
 
         model: ListModel {}
         delegate: Rectangle {
             property variant modelData: model
-            height: 50
+            height: 50 * screenScale
             width: parent.width
-            radius: 5
+            radius: 5 * screenScale
             color: "#88004400"
-            border.width: 1
+            border.width: 1 * screenScale
 
             function select() {
                 if( id === -1 ) {
@@ -83,7 +83,7 @@ Rectangle {
 
                 Column {
                     anchors.fill: parent
-                    anchors.margins: 3
+                    anchors.margins: 3 * screenScale
 
                     EditableInput {
                         id: text_name
@@ -108,7 +108,7 @@ Rectangle {
 
         highlight: Rectangle {
             color: "#aa00ff00"
-            radius: 5
+            radius: 5 * screenScale
         }
 
         Keys.onReturnPressed: currentItem.select()

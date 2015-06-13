@@ -51,6 +51,15 @@ function createDeathDayMark(unixtime) {
                 })
 }
 
+function createEventMark(unixtime) {
+    return event_mark.createObject(
+                events, {
+                    x: timeToPoint(unixtime),
+                    unixtime: unixtime,
+                    color: "#0a0"
+                })
+}
+
 function clean() {
     var i = 0
 
@@ -58,7 +67,7 @@ function clean() {
         events.children[i-1].destroy()
 }
 
-function setupAxis() {
+function updateAxis() {
     if( lineoflife.visible === false )
         return
 
@@ -80,10 +89,16 @@ function setupAxis() {
     for( i = axis.children.length; i > marks.length ; i-- )
         axis.children[i-1].destroy()
 
+    // Creating birth/death marks
     if( _profile_data.birth_date !== null )
         createBirthDayMark(_profile_data.birth_date)
     if( _profile_data.death_date !== null )
         createDeathDayMark(_profile_data.death_date)
+
+    // Create profile events marks
+    for( var e in _profile_data.events ) {
+        createEventMark(parseInt(e))
+    }
 }
 
 function pointToTime(point) {

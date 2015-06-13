@@ -1,12 +1,21 @@
 CONFIG(release, debug|release):DEFINES *= NDEBUG
-DEFINES += OS_LINUX LEVELDB_PLATFORM_POSIX LEVELDB_ATOMIC_PRESENT
+DEFINES += LEVELDB_PLATFORM_POSIX LEVELDB_ATOMIC_PRESENT
+
+android {
+    DEFINES += OS_ANDROID
+} else {
+    DEFINES += OS_LINUX
+}
 
 CONFIG += c++11
 
-INCLUDEPATH +=  $$PWD/leveldb \
+QMAKE_CFLAGS_WARN_ON -= -Wall
+QMAKE_CXXFLAGS_WARN_ON -= -Wall
+
+INCLUDEPATH += $$PWD/leveldb \
     $$PWD/leveldb/include
 
-SOURCES +=      $$PWD/leveldb/db/builder.cc \
+SOURCES += $$PWD/leveldb/db/builder.cc \
     $$PWD/leveldb/db/c.cc \
     $$PWD/leveldb/db/dbformat.cc \
     $$PWD/leveldb/db/db_impl.cc \

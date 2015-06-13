@@ -53,12 +53,12 @@ Rectangle {
         border.width: 2 * screenScale
         radius: 5 * screenScale
 
-        width: 300
-        height: 100
+        width: 300 * screenScale
+        height: 100 * screenScale
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 10
+            anchors.margins: 10 * screenScale
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 id: desc
@@ -69,7 +69,7 @@ Rectangle {
                 color: "#33000000"
                 border.color: "#000"
                 border.width: 2 * screenScale
-                height: 30
+                height: 30 * screenScale
                 anchors {
                     left: parent.left
                     right: parent.right
@@ -86,7 +86,7 @@ Rectangle {
 
                     font {
                         family: "monospace"
-                        pixelSize: 20
+                        pixelSize: 20 * screenScale
                     }
 
                     text: "Enter password"
@@ -111,7 +111,7 @@ Rectangle {
                     font {
                         bold: true
                         family: "monospace"
-                        pixelSize: 20
+                        pixelSize: 20 * screenScale
                     }
 
                     passwordCharacter: "*"
@@ -124,7 +124,7 @@ Rectangle {
                 color: "#33000000"
                 border.color: input_repeat.text == input.text ? "#000" : "#f00"
                 border.width: 2 * screenScale
-                height: 30
+                height: 30 * screenScale
                 anchors.left: parent.left
                 anchors.right: parent.right
 
@@ -141,7 +141,7 @@ Rectangle {
 
                     font {
                         family: "monospace"
-                        pixelSize: 20
+                        pixelSize: 20 * screenScale
                     }
 
                     text: "Repeat password"
@@ -161,7 +161,7 @@ Rectangle {
                     font {
                         bold: true
                         family: "monospace"
-                        pixelSize: 20
+                        pixelSize: 20 * screenScale
                     }
 
                     passwordCharacter: "*"
@@ -173,8 +173,8 @@ Rectangle {
                 id: button_ok
                 anchors.horizontalCenter: parent.horizontalCenter
 
-                width: 80
-                height: 30
+                width: 80 * screenScale
+                height: 30 * screenScale
                 color: "#595"
 
                 caption: qsTr("Ok")
@@ -188,7 +188,7 @@ Rectangle {
         State {
             name: 'create new password'
             PropertyChanges { target: repeat_password; visible: true }
-            PropertyChanges { target: window; height: 150 }
+            PropertyChanges { target: window; height: 150 * screenScale }
         }
     ]
 }

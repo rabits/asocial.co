@@ -22,3 +22,10 @@ backend.depends = \
     crypto \
     network \
     database
+
+android {
+    SUBDIRS += openssl
+    frontend.depends += openssl
+    crypto.depends += openssl
+    database.depends += openssl
+}

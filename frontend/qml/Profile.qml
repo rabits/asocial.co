@@ -2,6 +2,7 @@ import QtQuick 2.4
 import "Components"
 import "js/account.js" as A
 import "js/profile.js" as P
+import "js/userinteraction.js" as U
 
 Item {
     id: root
@@ -131,12 +132,12 @@ Item {
             _grab_point = Qt.point(mouse.x, mouse.y)
             background_highlight.visible = true
 
-            A.delayedActionStart(A.convertSheetPointToViewPoint(Qt.point(mouse.x + root.x, mouse.y + root.y)), root.editSwitch)
+            U.delayedActionStart(A.convertSheetPointToViewPoint(Qt.point(mouse.x + root.x, mouse.y + root.y)), root.editSwitch)
         }
 
         onReleased: {
             console.log("Released Profile #" + obj_data.id)
-            A.delayedActionStop()
+            U.delayedActionStop()
             background_highlight.visible = false
 
             if( root.state === "" || root.state === "edit_" ) {
@@ -153,9 +154,9 @@ Item {
             // Stop delayed action if mouse is far away from the last point
             if( pressed ) {
                 if( ! _stealed ) {
-                    if( Math.abs(_grab_point.x - mouse.x) + Math.abs(_grab_point.y - mouse.y) > 10 ) {
+                    if( Math.abs(_grab_point.x - mouse.x) + Math.abs(_grab_point.y - mouse.y) > 10 * screenScale ) {
                         _stealed = true
-                        A.delayedActionStop()
+                        U.delayedActionStop()
                     }
                 }
             }

@@ -1,6 +1,7 @@
 import QtQuick 2.4
 import "Components"
 import "js/account.js" as A
+import "js/userinteraction.js" as U
 
 Rectangle {
     id: account
@@ -12,7 +13,6 @@ Rectangle {
 
     property alias move_to: move_to
     property alias profile_component: profile_component
-    property alias delayed_action: delayed_action
 
     function show(account_id) {
         A.initDB(account_id)
@@ -45,7 +45,7 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        A.init(app, account, sheet, visible_area)
+        A.init(app, account, sheet, visible_area, show_event)
     }
 
     Flickable {
@@ -81,20 +81,20 @@ Rectangle {
 
                 _push_point = Qt.point(mouse.x, mouse.y)
                 _stealed = false
-                A.delayedActionStart(mouse, mouse_area.createNewProfileObjWrapper)
+                U.delayedActionStart(mouse, mouse_area.createNewProfileObjWrapper)
             }
             onReleased: {
                 console.log("Released Account")
-                A.delayedActionStop()
+                U.delayedActionStop()
             }
 
             onPositionChanged: {
                 if( pressed ) {
                     // Release if mouse is far away from the last point
                     if( _stealed !== true ) {
-                        if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 ) {
+                        if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 * screenScale ) {
                             _stealed = true
-                            A.delayedActionStop()
+                            U.delayedActionStop()
                         }
                     }
                 }
@@ -144,7 +144,7 @@ Rectangle {
 
     ScrollBar {
         id: horizontal_scrollbar
-        width: visible_area.width-12; height: 12
+        width: visible_area.width - 12 * screenScale; height: 12 * screenScale
         anchors.bottom: parent.bottom
         opacity: 0.2
         visible: sheet.scaledWidth > visible_area.width
@@ -164,7 +164,7 @@ Rectangle {
 
     ScrollBar {
         id: vertical_scrollbar
-        width: 12; height: visible_area.height-12
+        width: 12 * screenScale; height: visible_area.height - 12 * screenScale
         anchors.right: parent.right
         opacity: 0.2
         visible: sheet.scaledHeight > visible_area.height
@@ -182,25 +182,21 @@ Rectangle {
         }
     }
 
-    WaitAction {
-        id: delayed_action
-    }
-
     LineOfLife {
         id: line_of_life
         anchors {
             left: parent.left
             right: parent.right
             bottom: parent.bottom
-            leftMargin: 50
-            rightMargin: 50
-            bottomMargin: 20
+            leftMargin: 50 * screenScale
+            rightMargin: 50 * screenScale
+            bottomMargin: 20 * screenScale
         }
         height: parent.height / 10
     }
 
-    ShowText {
-        id: show_text
+    ShowEvent {
+        id: show_event
     }
 
     Component {

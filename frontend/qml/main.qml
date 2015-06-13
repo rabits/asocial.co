@@ -20,6 +20,14 @@ Window {
         visible: false
     }
 
+    PasswordRequest {
+        id: password_request
+    }
+
+    UserInteraction {
+        id: user_interaction
+    }
+
     Component.onCompleted: {
         console.log("Connecting listener of password requests")
         app.requestPassword.connect(password_request.show)
@@ -28,13 +36,5 @@ Window {
         accounts.accountSelected.connect(account.show)
 
         app.postinitDone.connect(root.startup)
-    }
-
-    ContextMenu {
-        id: context_menu
-    }
-
-    PasswordRequest {
-        id: password_request
     }
 }

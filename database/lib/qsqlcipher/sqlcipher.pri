@@ -5,8 +5,11 @@ contains(QT_CONFIG, posix_fallocate):DEFINES += HAVE_POSIX_FALLOCATE=1
 winrt: DEFINES += SQLITE_OS_WINRT
 qnx: DEFINES += _QNX_SOURCE
 
-INCLUDEPATH +=  $$PWD
+QMAKE_CFLAGS_WARN_ON -= -Wall
+QMAKE_CXXFLAGS_WARN_ON -= -Wall
 
-SOURCES +=      $$PWD/sqlite3.c
+INCLUDEPATH += $$PWD
+
+SOURCES += $$PWD/sqlite3.c
 
 TR_EXCLUDE += $$PWD/*

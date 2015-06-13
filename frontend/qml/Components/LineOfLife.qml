@@ -4,10 +4,12 @@ import co.asocial 1.0 // WDate enums
 import "LineOfLife"
 import "../js/lineoflife.js" as L
 import "../js/account.js" as A
+import "../js/userinteraction.js" as U
 
 Rectangle {
     id: lineoflife
 
+    property var _profile
     property var _profile_data
 
     property var _visible_from
@@ -22,6 +24,7 @@ Rectangle {
     clip: true
 
     function setProfile(profile_obj) {
+        _profile = profile_obj
         _profile_data = profile_obj.obj_data.data
 
         lineoflife.visible = true
@@ -38,17 +41,23 @@ Rectangle {
         _visible_from -= pend
         _visible_interval += pend*2
 
-        L.setupAxis()
+        L.updateAxis()
     }
 
     function newEvent(unixtime) {
         console.log("LineOfLife: Creating new event " + unixtime)
-        console.log(JSON.stringify(_profile_data))
+        if( _profile_data.events === undefined )
+            _profile_data.events = {}
+        _profile_data.events[unixtime.toString()] = { text: "" }
+
+        L.updateAxis()
+
+        A.showEvent(_profile_data.events, unixtime, _profile.saveObjData)
     }
 
     onWidthChanged: {
         L.setAxisDetailLevel()
-        L.setupAxis()
+        L.updateAxis()
     }
 
     on_Visible_intervalChanged: {
@@ -71,7 +80,7 @@ Rectangle {
 
             _visible_interval = Math.ceil(_visible_interval / 2)
 
-            L.setupAxis()
+            L.updateAxis()
             axis_cursor.setTo(unixtime)
         }
 
@@ -86,13 +95,13 @@ Rectangle {
                 _visible_from -= Math.ceil(_visible_interval / 2)
             _visible_interval *= 2
 
-            L.setupAxis()
+            L.updateAxis()
         }
 
         function centerTo(unixtime) {
             _visible_from = unixtime - Math.ceil(_visible_interval / 2)
 
-            L.setupAxis()
+            L.updateAxis()
         }
 
         Item {
@@ -130,31 +139,49 @@ Rectangle {
             onPressed: {
                 console.log("LineOfLife pressed")
                 _prev_from = _visible_from
-                _push_x = mouse.x
 
                 _push_point = Qt.point(mouse.x, mouse.y)
                 _stealed = false
-                L.delayedActionStart(mouse, L.newEventPos)
+                U.delayedActionStart(Qt.point(mouse.x + lineoflife.x, mouse.y + lineoflife.y), L.newEventPos)
             }
 
             onReleased: {
                 console.log("LineOfLife released")
-                L.delayedActionStop()
+                if( U.delayedActionStop() ) {
+                    // Find closer event and show it
+                    var chosen_event = null
+                    var mindx = null
+                    for( var i in events.children ) {
+                        var e = events.children[i]
+                        var dx = Math.abs(mouse.x - e.x)
+                        if( chosen_event === null || mindx > dx ) {
+                            chosen_event = e
+                            mindx = dx
+                        }
+                    }
+                    if( chosen_event !== null && mindx <= 10 * screenScale ) {
+                        if( chosen_event.focus )
+                            A.showEvent(_profile_data.events, chosen_event.unixtime, _profile.saveObjData)
+
+                        chosen_event.focus = true
+                    }
+                }
             }
 
             onMouseXChanged: {
                 axis_cursor.setTo(L.pointToTime(mouse.x))
 
                 if( pressed ) {
-                    _visible_from = _prev_from - L.pointToTime(mouse.x - _push_x) + _visible_from
+                    if( _push_point.x !== mouse.x ) {
+                        _visible_from = _prev_from - L.pointToTime(mouse.x - _push_point.x) + _visible_from
+                        L.updateAxis()
 
-                    L.setupAxis()
-
-                    // Release if mouse is far away from the last point
-                    if( _stealed !== true ) {
-                        if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 ) {
-                            _stealed = true
-                            L.delayedActionStop()
+                        // Release if mouse is far away from the last point
+                        if( _stealed !== true ) {
+                            if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 * screenScale ) {
+                                _stealed = true
+                                U.delayedActionStop()
+                            }
                         }
                     }
                 }
@@ -187,9 +214,5 @@ Rectangle {
 
             visible: axis_mouse_area.containsMouse
         }
-    }
-
-    WaitAction {
-        id: delayed_action
     }
 }

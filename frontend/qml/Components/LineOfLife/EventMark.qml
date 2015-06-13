@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import QtGraphicalEffects 1.0
 import co.asocial 1.0
 
 Rectangle {
@@ -36,5 +37,16 @@ Rectangle {
             font.family: "monospaced"
             color: textColor
         }
+    }
+
+    RectangularGlow {
+        id: effect
+        anchors.fill: root
+        visible: root.focus
+
+        glowRadius: 10
+        spread: 0.1
+        color: "#fff"
+        cornerRadius: root.radius + glowRadius
     }
 }

@@ -1,4 +1,4 @@
-/*
+/**
  * Account library
  * Provides singleton account functions
 **/
@@ -8,14 +8,16 @@ var app = null
 var _a = null
 var _s = null
 var _va = null
+var _se = null
 var _db = null
 
-function init(app_obj, account, sheet, visible_area) {
+function init(app_obj, account, sheet, visible_area, show_event) {
     console.log("Init account library")
     app = app_obj
     _a = account
     _s = sheet
     _va = visible_area
+    _se = show_event
 }
 
 function initDB(account_id) {
@@ -34,9 +36,8 @@ function emptyProfileData() {
     return {
         id: null,
         address: '',
-        data: {name: '', birth_date: null, death_date: null, avatar_url: '', avatar_url_eq: ''},
+        data: {name: '', birth_date: null, death_date: null, avatar_url: '', avatar_url_eq: '', events: {}},
         overlay: {},
-        events: [],
         description: ''
     }
 }
@@ -130,18 +131,9 @@ function sheetScaleTo(vector, point) {
 }
 
 /**
- * Account Delayed Action
+ * Account show/edit event info
 **/
 
-function delayedActionStart(view_pos, slot) {
-    delayedActionStop()
-    _a.delayed_action.start(view_pos, slot)
+function showEvent(events, unixtime, refresh_func) {
+    _se.show(events, unixtime, refresh_func)
 }
-
-function delayedActionStop() {
-    _a.delayed_action.stop()
-}
-
-/**
- * Account show/create text
-**/

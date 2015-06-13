@@ -16,6 +16,7 @@ Rectangle {
     function setEdit(is) {
         root.enabled = true
         root.editable = is
+        text_edit.focus = true
     }
 
     onEditableChanged: {
@@ -29,7 +30,7 @@ Rectangle {
             text_edit.focus = true
     }
 
-    radius: 2
+    radius: 2 * screenScale
     color: "#00000000"
     clip: true
 
@@ -57,7 +58,7 @@ Rectangle {
             pressDelay: 300
             anchors {
                 fill: parent
-                margins: 2
+                margins: 2 * screenScale
             }
             contentWidth: text_main.visible ? text_main.width : text_edit.width
             contentHeight: text_main.visible ? text_main.contentHeight : text_edit.contentHeight
@@ -108,7 +109,7 @@ Rectangle {
 
         ScrollBar {
             id: vertical_scrollbar
-            width: 12; height: text_content.height
+            width: 12 * screenScale; height: text_content.height
             anchors.right: text_content.right
             opacity: 0.2
             orientation: Qt.Vertical
@@ -134,8 +135,8 @@ Rectangle {
                 tool_panel.enabled = false
             }
 
-            width: 30
-            height: tool_column_view.height + 10
+            width: 30 * screenScale
+            height: tool_column_view.height + 10 * screenScale
 
             color: "#55000000"
 
@@ -149,21 +150,21 @@ Rectangle {
                     top: parent.top
                     left: parent.left
                     right: parent.right
-                    margins: 5
+                    margins: 5 * screenScale
                 }
 
                 Button {
                     id: button_edit
                     anchors.horizontalCenter: parent.horizontalCenter
 
-                    width: 20
-                    height: 20
+                    width: 20 * screenScale
+                    height: 20 * screenScale
                     color: "#595"
 
-                    caption: qsTr("E")
+                    caption: "E"
 
                     onClicked: {
-                        root.editable = true
+                        root.setEdit(true)
                     }
                 }
             }
@@ -174,7 +175,7 @@ Rectangle {
                     top: parent.top
                     left: parent.left
                     right: parent.right
-                    margins: 5
+                    margins: 5 * screenScale
                 }
 
                 visible: false
@@ -183,15 +184,15 @@ Rectangle {
                     id: button_close
                     anchors.horizontalCenter: parent.horizontalCenter
 
-                    width: 20
-                    height: 20
+                    width: 20 * screenScale
+                    height: 20 * screenScale
                     color: "#955"
 
-                    caption: qsTr("X")
+                    caption: "X"
 
                     onClicked: {
                         text_edit.text = root.text
-                        root.editable = false
+                        root.setEdit(false)
                     }
                 }
 
@@ -199,11 +200,11 @@ Rectangle {
                     id: button_save
                     anchors.horizontalCenter: parent.horizontalCenter
 
-                    width: 20
-                    height: 20
+                    width: 20 * screenScale
+                    height: 20 * screenScale
                     color: "#595"
 
-                    caption: qsTr("S")
+                    caption: "S"
 
                     onClicked: {
                         root.text = text_edit.text
