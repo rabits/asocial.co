@@ -9,6 +9,7 @@
 #include <QUdpSocket>
 #include <QTcpSocket>
 #include <QTcpServer>
+#include <QDataStream>
 
 #include "settings.h"
 #include "network/netdevice.h"
