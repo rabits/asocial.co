@@ -108,20 +108,3 @@ function pointToTime(point) {
 function timeToPoint(unixtime) {
     return Math.ceil((1.0 * (unixtime - lineoflife._visible_from) / lineoflife._visible_interval) * axis_mouse_area.width)
 }
-
-function newEventPos(pos) {
-    lineoflife.newEvent(L.pointToTime(pos.x))
-}
-
-/**
- * LineOfLife Delayed Action
-**/
-
-function delayedActionStart(view_pos, slot) {
-    delayedActionStop()
-    delayed_action.start(view_pos, slot)
-}
-
-function delayedActionStop() {
-    delayed_action.stop()
-}

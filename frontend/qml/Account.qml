@@ -63,41 +63,27 @@ Rectangle {
 
         MouseArea {
             id: mouse_area
+
             parent: visible_area
             anchors.fill: parent
             z: -1
 
-            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-
-            property bool _stealed: true
-            property point _push_point
-
-            function createNewProfileObjWrapper(view_pos) {
-                A.createNewProfileObj(A.convertViewPointToSheetPoint(view_pos))
-            }
+            preventStealing: true
 
             onPressed: {
                 console.log("Pressed Account")
 
-                _push_point = Qt.point(mouse.x, mouse.y)
-                _stealed = false
-                U.delayedActionStart(mouse, mouse_area.createNewProfileObjWrapper)
+                var point = A.convertViewPointToSheetPoint(mouse)
+                drag.target = U.actionMenuShow(mouse, [
+                                     { name: qsTr("New Profile"), color: "#aff", action: A.createNewProfileObj, property: point },
+                                     { name: qsTr("Zoom +"), color: "#faf", action: function(p){ A.sheetScaleTo(+1, p) }, property: point },
+                                     { name: qsTr("Zoom -"), color: "#ffa", action: function(p){ A.sheetScaleTo(-1, p) }, property: point }
+                                 ])
             }
             onReleased: {
                 console.log("Released Account")
-                U.delayedActionStop()
-            }
-
-            onPositionChanged: {
-                if( pressed ) {
-                    // Release if mouse is far away from the last point
-                    if( _stealed !== true ) {
-                        if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 * screenScale ) {
-                            _stealed = true
-                            U.delayedActionStop()
-                        }
-                    }
-                }
+                U.actionMenuHide()
+                drag.target = null
             }
 
             onWheel: {
@@ -159,6 +145,14 @@ Rectangle {
         }
         transitions: Transition {
             NumberAnimation { property: "opacity"; duration: 1000; easing.type: Easing.OutCubic }
+        }
+
+        DropArea {
+            anchors.fill: parent
+
+            onEntered: console.log("entered");
+            onExited: console.log("exited");
+            onDropped: console.log("dropped");
         }
     }
 

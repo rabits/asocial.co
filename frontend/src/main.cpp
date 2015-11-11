@@ -7,20 +7,33 @@
 
 #include "settings.h"
 
+#ifdef Q_OS_ANDROID
+#   include <android/log.h>
+#endif
+
+void printLogMessage(int priority, QString msg)
+{
+#ifdef Q_OS_ANDROID
+    __android_log_print(priority, "asocial", msg.toLocal8Bit().constData());
+#else
+    ::std::fprintf(stderr, msg.toLocal8Bit().constData());
+#endif
+}
+
 void myMessageOutput(QtMsgType type, const QMessageLogContext &, const QString &msg)
 {
     switch (type) {
         case QtDebugMsg:
-            ::std::fprintf(stderr, "[aSocial %s] %s\n", QDateTime::currentDateTime().toString("dd.MM.yy hh:mm:ss.zzz").toLocal8Bit().constData(), msg.toLocal8Bit().constData());
+            printLogMessage(3, QString("[aSocial %1] %2\n").arg(QDateTime::currentDateTime().toString("dd.MM.yy hh:mm:ss.zzz")).arg(msg));
             break;
         case QtWarningMsg:
-            ::std::fprintf(stderr, "[aSocial] Warning: %s\n", msg.toLocal8Bit().constData());
+            printLogMessage(5, QString("[aSocial] Warning: %1\n").arg(msg));
             break;
         case QtCriticalMsg:
-            ::std::fprintf(stderr, "[aSocial] Critical: %s\n", msg.toLocal8Bit().constData());
+            printLogMessage(6, QString("[aSocial] Critical: %s\n").arg(msg));
             break;
         case QtFatalMsg:
-            ::std::fprintf(stderr, "[aSocial] Fatal: %s\n", msg.toLocal8Bit().constData());
+            printLogMessage(7, QString("[aSocial] Fatal: %s\n").arg(msg));
             Frontend::destroyI();
             abort();
     }

@@ -14,14 +14,37 @@ function init(app_obj, user_interaction_obj) {
 }
 
 /**
- * Delayed Action
+ * Window size
 **/
-
-function delayedActionStart(view_pos, slot) {
-    delayedActionStop()
-    return _u.delayed_action.start(view_pos, slot)
+function windowSize() {
+    return {
+        width: _u.width,
+        height: _u.height
+    }
 }
 
-function delayedActionStop() {
-    return _u.delayed_action.stop()
+/**
+ * Action Menu
+**/
+
+function actionMenuShow(view_pos, actions) {
+    return _u.action_menu.show(view_pos, actions)
+}
+
+function actionMenuHide() {
+    return _u.action_menu.hide()
+}
+
+
+/**
+ * Action Delayed
+**/
+
+function actionDelayedStart(view_pos, slot) {
+    actionDelayedStop()
+    return _u.action_delayed.start(view_pos, slot)
+}
+
+function actionDelayedStop() {
+    return _u.action_delayed.stop()
 }

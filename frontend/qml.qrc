@@ -9,7 +9,7 @@
         <file>qml/Components/ScrollBar.qml</file>
         <file>qml/js/account.js</file>
         <file>qml/Components/EditableText.qml</file>
-        <file>qml/Components/WaitAction.qml</file>
+        <file>qml/Components/ActionWait.qml</file>
         <file>qml/js/profile.js</file>
         <file>qml/Components/EditableInput.qml</file>
         <file>qml/js/markdown.lib.js</file>
@@ -22,5 +22,6 @@
         <file>qml/Components/LineOfLife/EventMark.qml</file>
         <file>qml/UserInteraction.qml</file>
         <file>qml/js/userinteraction.js</file>
+        <file>qml/Components/ActionMenu.qml</file>
     </qresource>
 </RCC>

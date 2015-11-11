@@ -13,6 +13,9 @@ Item {
 
     scale: 0.01
 
+    property bool is_master: false
+    property bool is_edit: false
+
     property var obj_data
 
     function createConnection(profile_id, pos) {
@@ -34,7 +37,7 @@ Item {
 
     function master() {
         console.log("Set master profile")
-        state = 'master'
+        root.is_master = true
 
         root.x = 0-300/2
         root.y = 0-400/2
@@ -51,12 +54,10 @@ Item {
     }
 
     function editSwitch() {
-        if( root.state.split('_')[0] === "edit" ) {
-            root.state = root.state.split('_')[1]
+        if( root.is_edit )
             root.saveObjData()
-        } else {
-            root.state = "edit_" + root.state
-        }
+
+        root.is_edit = ! root.is_edit
     }
 
     Component.onCompleted: {
@@ -104,11 +105,6 @@ Item {
         hoverEnabled: true
         preventStealing: true
 
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-
-        property point _grab_point
-        property bool _stealed: true
-
         onClicked: {
             console.log("Clicked Profile #" + obj_data.id)
             A.sheetItemTop(root)
@@ -128,46 +124,45 @@ Item {
             console.log("Pressed Profile #" + obj_data.id)
             console.log(JSON.stringify(obj_data))
 
-            _stealed = false
-            _grab_point = Qt.point(mouse.x, mouse.y)
-            background_highlight.visible = true
+            var point = Qt.point(mouse.x + root.x, mouse.y + root.y)
+            var actions = [
+                        { name: root.is_edit ? qsTr("Save") : qsTr("Edit"), color: "#faa", action: root.editSwitch },
+                        { name: qsTr("Zoom +"), color: "#faf", action: function(p){ A.sheetScaleTo(+1, p) }, property: point },
+                        { name: qsTr("Zoom -"), color: "#ffa", action: function(p){ A.sheetScaleTo(-1, p) }, property: point }
+                    ]
+            if( ! root.is_master )
+                actions.unshift({ name: qsTr("Move"), color: "#aff", action: function(){ console.log("TODO move profile action") } })
 
-            U.delayedActionStart(A.convertSheetPointToViewPoint(Qt.point(mouse.x + root.x, mouse.y + root.y)), root.editSwitch)
+            drag.target = U.actionMenuShow(A.convertSheetPointToViewPoint(point), actions)
+
+            background_highlight.visible = true
         }
 
         onReleased: {
             console.log("Released Profile #" + obj_data.id)
-            U.delayedActionStop()
+
+            U.actionMenuHide()
             background_highlight.visible = false
 
-            if( root.state === "" || root.state === "edit_" ) {
+            // TODO: Save profile position
+            /*if( root.state === "" || root.state === "edit_" ) {
                 root.x += background_highlight.x
                 root.y += background_highlight.y
                 background_highlight.x = background_highlight.y = 0
                 obj_data.pos.x = root.x + root.width/2
                 obj_data.pos.y = root.y + root.height/2
                 A.masterProfile().saveObjData()
-            }
+            }*/
         }
 
         onPositionChanged: {
-            // Stop delayed action if mouse is far away from the last point
-            if( pressed ) {
-                if( ! _stealed ) {
-                    if( Math.abs(_grab_point.x - mouse.x) + Math.abs(_grab_point.y - mouse.y) > 10 * screenScale ) {
-                        _stealed = true
-                        U.delayedActionStop()
-                    }
-                }
-            }
-
-            // Drag profile
-            if( mouse.buttons & Qt.LeftButton == 1 ) {
+            // TODO: Drag profile
+            /*if( mouse.buttons & Qt.LeftButton == 1 ) {
                 if( root.state === "" || root.state === "edit_" ) {
                     background_highlight.x = mouse.x - _grab_point.x
                     background_highlight.y = mouse.y - _grab_point.y
                 }
-            }
+            }*/
         }
 
         onWheel: {
@@ -273,6 +268,7 @@ Item {
     states: [
         State {
             name: "master"
+            when: root.is_master && (! root.is_edit)
             PropertyChanges { target: background; radius: 0 }
             PropertyChanges { target: root; width: 300; height: 400 }
             PropertyChanges { target: avatar_background; width: 200; height: 300; anchors.topMargin: 20 }
@@ -282,6 +278,7 @@ Item {
         },
         State {
             name: "edit_"
+            when: (! root.is_master) && root.is_edit
             PropertyChanges { target: data_name; enabled: true; editable: true }
             PropertyChanges { target: data_birth_date; enabled: true; editable: true }
             PropertyChanges { target: data_death_date; enabled: true; editable: true }
@@ -290,6 +287,7 @@ Item {
         State {
             name: "edit_master"
             extend: "master"
+            when: root.is_master && root.is_edit
             PropertyChanges { target: data_name; enabled: true; editable: true }
             PropertyChanges { target: data_birth_date; enabled: true; editable: true; visible: true }
             PropertyChanges { target: data_death_date; enabled: true; editable: true; visible: true }

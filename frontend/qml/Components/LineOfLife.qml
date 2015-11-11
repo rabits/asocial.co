@@ -68,7 +68,7 @@ Rectangle {
         id: content
         anchors.fill: parent
 
-        function zoom(unixtime) {
+        function zoomIn(unixtime) {
             if( L.current_detail_level === WDate.HOUR )
                 return
 
@@ -124,85 +124,114 @@ Rectangle {
             }
         }
 
-        MouseArea {
-            id: axis_mouse_area
+        Flickable {
+            id: axis_flickable
             anchors.fill: parent
+            pressDelay: 300
+            clip: true
 
-            hoverEnabled: true
+            contentWidth: 0
+            contentHeight: 0
+            contentX: 0
+
+            flickableDirection: Flickable.HorizontalFlick
+            rightMargin: 5000
+            leftMargin: 5000
 
             property var _prev_from
-            property int _push_x
 
-            property bool _stealed
-            property point _push_point
-
-            onPressed: {
-                console.log("LineOfLife pressed")
+            onMovementStarted: {
                 _prev_from = _visible_from
-
-                _push_point = Qt.point(mouse.x, mouse.y)
-                _stealed = false
-                U.delayedActionStart(Qt.point(mouse.x + lineoflife.x, mouse.y + lineoflife.y), L.newEventPos)
             }
 
-            onReleased: {
-                console.log("LineOfLife released")
-                if( U.delayedActionStop() ) {
-                    // Find closer event and show it
-                    var chosen_event = null
-                    var mindx = null
-                    for( var i in events.children ) {
-                        var e = events.children[i]
-                        var dx = Math.abs(mouse.x - e.x)
-                        if( chosen_event === null || mindx > dx ) {
-                            chosen_event = e
-                            mindx = dx
-                        }
-                    }
-                    if( chosen_event !== null && mindx <= 10 * screenScale ) {
-                        if( chosen_event.focus )
-                            A.showEvent(_profile_data.events, chosen_event.unixtime, _profile.saveObjData)
+            onMovementEnded: {
+                rightMargin = 5000
+                leftMargin = 5000
+                contentX = 0
+            }
 
-                        chosen_event.focus = true
-                    }
+            onContentXChanged: {
+                if( moving ) {
+                    _visible_from = _prev_from + L.pointToTime(contentX) - _visible_from
+                    L.updateAxis()
+
+                    if( contentX < 2000 - leftMargin  )
+                        leftMargin += 5000
+                    else if( contentX > rightMargin - 2000 )
+                        rightMargin += 5000
                 }
             }
 
-            onMouseXChanged: {
-                axis_cursor.setTo(L.pointToTime(mouse.x))
+            MouseArea {
+                id: axis_mouse_area
 
-                if( pressed ) {
-                    if( _push_point.x !== mouse.x ) {
-                        _visible_from = _prev_from - L.pointToTime(mouse.x - _push_point.x) + _visible_from
-                        L.updateAxis()
+                parent: axis_flickable
+                anchors.fill: parent
+                z: -1
 
-                        // Release if mouse is far away from the last point
-                        if( _stealed !== true ) {
-                            if( Math.abs(_push_point.x - mouse.x) + Math.abs(_push_point.y - mouse.y) > 10 * screenScale ) {
-                                _stealed = true
-                                U.delayedActionStop()
+                preventStealing: true
+
+                hoverEnabled: true
+                drag.threshold: 0
+
+                onPressed: {
+                    console.log("LineOfLife pressed")
+                    axis_cursor.setTo(L.pointToTime(mouse.x))
+
+                    var point = Qt.point(mouse.x + lineoflife.x, mouse.y + lineoflife.y)
+                    var actions = [
+                                { name: qsTr("New Event"), color: "#faa", action: lineoflife.newEvent, property: axis_cursor.unixtime },
+                                { name: qsTr("Zoom +"), color: "#faf", action: content.zoomIn, property: axis_cursor.unixtime },
+                                { name: qsTr("Zoom -"), color: "#ffa", action: content.zoomOut }
+                            ]
+                    // TODO: Collect near events to show & edit
+
+                    drag.target = U.actionMenuShow(point, actions)
+                }
+
+                onReleased: {
+                    console.log("LineOfLife released")
+
+                    U.actionMenuHide()
+                    drag.target = null
+
+                    /*if( U.actionDelayedStop() ) {
+                        // Find closer event and show it
+                        var chosen_event = null
+                        var mindx = null
+                        for( var i in events.children ) {
+                            var e = events.children[i]
+                            var dx = Math.abs(mouse.x - e.x)
+                            if( chosen_event === null || mindx > dx ) {
+                                chosen_event = e
+                                mindx = dx
                             }
                         }
-                    }
+                        if( chosen_event !== null && mindx <= 10 * screenScale ) {
+                            if( chosen_event.focus )
+                                A.showEvent(_profile_data.events, chosen_event.unixtime, _profile.saveObjData)
+
+                            chosen_event.focus = true
+                        }
+                    }*/
                 }
-            }
 
-            onWheel: {
-                console.log("LineOfLife wheel")
+                onPositionChanged: {
+                    axis_cursor.setTo(L.pointToTime(mouse.x))
+                }
 
-                var time = axis_cursor.unixtime
+                onWheel: {
+                    console.log("LineOfLife wheel")
 
-                if( wheel.angleDelta.y > 0 )
-                    content.zoom(time)
-                else if( wheel.angleDelta.y < 0 )
-                    content.zoomOut()
-                else
-                    content.pos(time)
-            }
+                    var time = axis_cursor.unixtime
 
-            Item {
-                id: active_content
-                anchors.fill: parent
+                    if( wheel.angleDelta.y > 0 )
+                        content.zoomIn(time)
+                    else if( wheel.angleDelta.y < 0 )
+                        content.zoomOut()
+                    else
+                        content.pos(time)
+                }
             }
         }
 
