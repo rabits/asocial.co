@@ -11,7 +11,7 @@ export ANDROID_DEV=${ANDROID_NDK_ROOT}/platforms/${ANDROID_NDK_PLATFORM}/arch-ar
     CC=${ANDROID_NDK_ROOT}/toolchains/${ANDROID_NDK_TOOLCHAIN_PREFIX}-${ANDROID_NDK_TOOLCHAIN_VERSION}/prebuilt/${ANDROID_NDK_HOST}/bin/${ANDROID_NDK_TOOLS_PREFIX}-gcc \
     AR=${ANDROID_NDK_ROOT}/toolchains/${ANDROID_NDK_TOOLCHAIN_PREFIX}-${ANDROID_NDK_TOOLCHAIN_VERSION}/prebuilt/${ANDROID_NDK_HOST}/bin/${ANDROID_NDK_TOOLS_PREFIX}-ar
 
-( [ -f ${OPENSSL_DIST}.tar.gz ] || wget https://www.openssl.org/source/${OPENSSL_DIST}.tar.gz ) && \
+( [ -f ${OPENSSL_DIST}.tar.gz ] || curl -Lo ${OPENSSL_DIST}.tar.gz https://www.openssl.org/source/${OPENSSL_DIST}.tar.gz ) && \
     echo "${OPENSSL_MD5} ${OPENSSL_DIST}.tar.gz" > ${OPENSSL_DIST}.tar.gz.md5 && \
     md5sum -c ${OPENSSL_DIST}.tar.gz.md5 && \
     tar xf ${OPENSSL_DIST}.tar.gz && \

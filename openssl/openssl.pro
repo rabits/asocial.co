@@ -6,8 +6,8 @@ TARGET = ssl
 OTHER_FILES += \
     build.sh
 
-OPENSSL_VERSION = 1.0.2c
-OPENSSL_MD5 = 8c8d81a9ae7005276e486702edbcd4b6
+OPENSSL_VERSION = 1.0.2d
+OPENSSL_MD5 = 38dd619b2e77cbac69b99f52a053d25a
 
 openssl_build.target = crypto
 openssl_build.commands = $$PWD/build.sh $$OPENSSL_VERSION $$OPENSSL_MD5

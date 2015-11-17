@@ -1,5 +1,32 @@
-image: rabits/qt:5.4-desktop
-script:
-  - apt-get install -qq libssl-dev
-  - qmake asocial.co.pro
-  - make -j4
+matrix:
+  QT_VERSION:
+    - "5.4"
+  PLATFORM:
+    - desktop
+    - android
+
+clone:
+  depth: 5
+  recursive: true
+
+build:
+  image: rabits/qt:$$QT_VERSION-$$PLATFORM
+  volumes:
+    - /srv/drone/builds:/tmp/builds
+  commands:
+    - sudo apt-get -qq update && sudo apt-get install -qq -y libssl-dev imagemagick
+    - mkdir ~/build && cd ~/build
+    - qmake -r $CI_BUILD_DIR
+    - make -j4
+    - make install INSTALL_ROOT=$HOME/dist
+    - mkdir -p /tmp/builds/asocial.co/$CI_BUILD_NUMBER/$$QT_VERSION-$$PLATFORM
+    - |
+        if [ "$$PLATFORM" = 'desktop' ] ; then
+          tar czf /tmp/builds/asocial.co/$CI_BUILD_NUMBER/$$QT_VERSION-$$PLATFORM/asocial.co.tar.gz -C ~/dist .
+        fi
+    - |
+        if [ "$$PLATFORM" = 'android' ] ; then
+          androiddeployqt --input ~/build/frontend/android-*-deployment-settings.json --output ~/dist --deployment bundled --gradle
+          androiddeployqt --input ~/build/frontend/android-*-deployment-settings.json --output ~/dist --deployment bundled --gradle --release
+          cp ~/dist/build/outputs/apk/*.apk /tmp/builds/asocial.co/$CI_BUILD_NUMBER/$$QT_VERSION-$$PLATFORM/
+        fi
