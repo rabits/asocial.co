@@ -6,6 +6,7 @@
 #include "crypto/privkey.h"
 
 #include <QJsonObject>
+#include <QJsonArray>
 
 class AccountDatabase
     : public SqlDatabase
@@ -20,6 +21,15 @@ public:
     Q_INVOKABLE int createProfile(const QJsonObject &profile);
     Q_INVOKABLE QJsonObject getProfile(const int id);
     Q_INVOKABLE bool updateProfileData(const QJsonObject &profile);
+
+    Q_INVOKABLE int createEvent(const QJsonObject &event);
+    Q_INVOKABLE QJsonObject getEvent(const int id);
+    Q_INVOKABLE QJsonArray getEvents(const int type);
+    Q_INVOKABLE bool updateEvent(const QJsonObject &event);
+
+    Q_INVOKABLE QString getEventTypeName(const int id);
+    Q_INVOKABLE int getEventTypeId(const QString &name);
+    Q_INVOKABLE QJsonArray getEventTypes();
 
     Q_INVOKABLE QString createAddress();
 

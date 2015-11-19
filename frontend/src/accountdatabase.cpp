@@ -1,7 +1,7 @@
 #include "accountdatabase.h"
 
 // Version
-#define DATABASE_VERSION 2
+#define DATABASE_VERSION 3
 // Backward-compatibility with all versions greater than
 #define DATABASE_MINIMAL_VERSION 0
 
@@ -67,21 +67,20 @@ QJsonObject AccountDatabase::getProfile(const int id)
     QSqlQuery query(m_db);
     QJsonObject out;
 
-    query.prepare("SELECT rowid as id, date, address, data, overlay, description FROM profiles WHERE rowid = :id LIMIT 1");
+    query.prepare("SELECT rowid, date, address, data, overlay, description FROM profiles WHERE rowid = :id LIMIT 1");
     query.bindValue(":id", id);
 
     if( ! query.exec() ) {
         qCritical() << query.lastError();
     } else if( query.next() ) {
-        out["id"] = query.value("id").toInt();
+        out["id"] = query.value("rowid").toLongLong();
         out["date"] = query.value("date").toLongLong();
         out["address"] = query.value("address").toString();
         out["data"] = QJsonDocument::fromJson(query.value("data").toByteArray()).object();
         out["overlay"] = QJsonDocument::fromJson(query.value("overlay").toByteArray()).object();
         out["description"] = query.value("description").toString();
-    } else {
+    } else
         qWarning() << "Unable to find required profile id#" << id;
-    }
 
     return out;
 }
@@ -92,10 +91,11 @@ bool AccountDatabase::updateProfileData(const QJsonObject &profile)
 
     QSqlQuery query(m_db);
 
-    query.prepare("UPDATE profiles SET date = :date, data = :data WHERE rowid = :id");
+    query.prepare("UPDATE profiles SET date = :date, data = :data, overlay = :overlay WHERE rowid = :id");
     query.bindValue(":id", profile.value("id").toInt());
     query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
     query.bindValue(":data", QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact));
+    query.bindValue(":overlay", QJsonDocument(profile.value("overlay").toObject()).toJson(QJsonDocument::Compact));
 
     if( ! query.exec() ) {
         qCritical() << query.lastError();
@@ -103,6 +103,172 @@ bool AccountDatabase::updateProfileData(const QJsonObject &profile)
     }
 
     return true;
+}
+
+int AccountDatabase::createEvent(const QJsonObject &event)
+{
+    qDebug("Creating new event");
+
+    int type = getEventTypeId(event.value("type").toString());
+
+    if( type != -1 ) {
+        QSqlQuery query(m_db);
+        query.prepare("INSERT INTO events (date, occur, link, type, owner, recipient, data, overlay) VALUES (:date, :occur, :link, :type, :owner, :recipient, :data, :overlay)");
+        query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
+        query.bindValue(":occur", event.value("occur").toVariant().toLongLong());
+        query.bindValue(":link", event.value("link").toVariant().toLongLong());
+        query.bindValue(":type", type);
+        query.bindValue(":owner", event.value("owner").toVariant().toLongLong());
+        query.bindValue(":recipient", event.value("recipient").toVariant().toLongLong());
+        query.bindValue(":data", QJsonDocument(event.value("data").toObject()).toJson(QJsonDocument::Compact));
+        query.bindValue(":overlay", QJsonDocument(event.value("overlay").toObject()).toJson(QJsonDocument::Compact));
+
+        if( ! query.exec() )
+            qCritical() << query.lastError();
+
+        return query.lastInsertId().toInt();
+    }
+
+    qWarning() << "Event type" << event.value("type").toString() << "not found";
+    return -1;
+}
+
+QJsonObject AccountDatabase::getEvent(const int id)
+{
+    qDebug("Getting event");
+
+    QSqlQuery query(m_db);
+    QJsonObject out;
+
+    query.prepare("SELECT rowid, date, occur, link, type, owner, recipient, data, overlay FROM events WHERE rowid = :id LIMIT 1");
+    query.bindValue(":id", id);
+
+    if( ! query.exec() )
+        qCritical() << query.lastError();
+    else if( query.next() ) {
+        out["id"] = query.value("rowid").toInt();
+        out["date"] = query.value("date").toLongLong();
+        out["occur"] = query.value("occur").toLongLong();
+        out["type"] = getEventTypeName(query.value("type").toInt());
+        out["owner"] = query.value("owner").toLongLong();
+        out["recipient"] = query.value("recipient").toLongLong();
+        out["data"] = QJsonDocument::fromJson(query.value("data").toByteArray()).object();
+        out["overlay"] = QJsonDocument::fromJson(query.value("overlay").toByteArray()).object();
+    } else
+        qWarning() << "Unable to find required profile id#" << id;
+
+    return out;
+}
+
+QJsonArray AccountDatabase::getEvents(const int type)
+{
+    qDebug("Getting events");
+    QJsonArray out;
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT rowid, date, occur, link, type, owner, recipient, data, overlay FROM events WHERE type = :type");
+    query.bindValue(":type", type);
+
+    if( ! query.exec() )
+        qCritical() << query.lastError();
+    else {
+        while( query.next() ) {
+            QJsonObject obj;
+
+            obj["id"] = query.value("rowid").toInt();
+            obj["date"] = query.value("date").toLongLong();
+            obj["occur"] = query.value("occur").toLongLong();
+            obj["type"] = getEventTypeName(query.value("type").toInt());
+            obj["owner"] = query.value("owner").toLongLong();
+            obj["recipient"] = query.value("recipient").toLongLong();
+            obj["data"] = QJsonDocument::fromJson(query.value("data").toByteArray()).object();
+            obj["overlay"] = QJsonDocument::fromJson(query.value("overlay").toByteArray()).object();
+
+            out.append(obj);
+        }
+    }
+
+    return out;
+}
+
+bool AccountDatabase::updateEvent(const QJsonObject &event)
+{
+    qDebug("Updating event data");
+
+    QSqlQuery query(m_db);
+
+    query.prepare("UPDATE events SET date = :date, occur = :occur, data = :data, overlay = :overlay WHERE rowid = :id");
+    query.bindValue(":id", event.value("id").toInt());
+    query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
+    query.bindValue(":occur", event.value("occur").toVariant().toLongLong());
+    query.bindValue(":data", QJsonDocument(event.value("data").toObject()).toJson(QJsonDocument::Compact));
+    query.bindValue(":overlay", QJsonDocument(event.value("overlay").toObject()).toJson(QJsonDocument::Compact));
+
+    if( ! query.exec() ) {
+        qCritical() << query.lastError();
+        return false;
+    }
+
+    return true;
+}
+
+QString AccountDatabase::getEventTypeName(const int id)
+{
+    QSqlQuery query(m_db);
+    query.prepare("SELECT name FROM event_type WHERE rowid = :id LIMIT 1");
+    query.bindValue(":id", id);
+
+    if( ! query.exec() )
+        qCritical() << query.lastError();
+
+    query.next();
+    if( ! query.isNull(0) )
+        return query.value(0).toString();
+
+    // If found nothing
+    return "";
+}
+
+int AccountDatabase::getEventTypeId(const QString &name)
+{
+    QSqlQuery query(m_db);
+    query.prepare("SELECT rowid FROM event_type WHERE name = :name LIMIT 1");
+    query.bindValue(":name", name);
+
+    if( ! query.exec() )
+        qCritical() << query.lastError();
+
+    query.next();
+    if( ! query.isNull(0) )
+        return query.value(0).toInt();
+
+    // If not found
+    return -1;
+}
+
+QJsonArray AccountDatabase::getEventTypes()
+{
+    qDebug("Getting event types");
+    QJsonArray out;
+
+    QSqlQuery query(m_db);
+
+    if( ! query.exec("SELECT rowid, name, description FROM event_types") )
+        qCritical() << query.lastError();
+    else {
+        while( query.next() ) {
+            QJsonObject obj;
+
+            obj["id"] = query.value("rowid").toInt();
+            obj["date"] = query.value("name").toString();
+            obj["occur"] = query.value("description").toString();
+
+            out.append(obj);
+        }
+    }
+
+    return out;
 }
 
 QString AccountDatabase::createAddress()
@@ -142,23 +308,21 @@ long AccountDatabase::version()
 
     qDebug("Get database version");
 
+    // Default version db set
+    m_version = 0;
+
     // Prepare table before query it
     table("database", QStringList()
           << "version int not null"
           << "description text not null");
 
     QSqlQuery query(m_db);
-    if( ! query.exec("SELECT version FROM database ORDER BY rowid DESC LIMIT 1") ) {
+    if( ! query.exec("SELECT version FROM database ORDER BY rowid DESC LIMIT 1") )
         qCritical() << query.lastError();
-    } else {
-        query.next();
-        if( ! query.isNull(0) ) {
-            m_version = query.value(0).toLongLong();
-        } else {
-            // Database no version - it's empty
-            m_version = 0;
-        }
-    }
+
+    query.next();
+    if( ! query.isNull(0) )
+        m_version = query.value(0).toLongLong();
 
     return m_version;
 }
@@ -243,7 +407,8 @@ void AccountDatabase::upgrade(const long from_version)
                   << "type int not null"        // Type of event
                   << "owner int not null"       // Profile owns event
                   << "recipient int"            // Recipient of the event
-                  << "data text not null");     // Json with event data
+                  << "data text not null"       // Json with event data
+                  << "overlay text not null");  // Json overlay data
 
             query.exec("DROP TABLE storage_type");
             table("storage_type", QStringList()
@@ -256,6 +421,21 @@ void AccountDatabase::upgrade(const long from_version)
                        "('file', 'Just an unknown binary file like bin, zip, tar.gz etc.')");
 
             setVersion(2, "Added events table to separate events and profile data");
+        case 3:
+            query.exec("DROP TABLE profiles_history");
+            table("profiles_history", QStringList() // History of profiles
+                  << "id integer not null"      // Id of the profile
+                  << "date integer not null"    // Change date
+                  << "data text not null"       // Changed data
+                  << "description text");       // Description of change
+
+            table("events_history", QStringList() // History of events
+                  << "id integer not null"      // Id of the event
+                  << "date integer not null"    // Change date
+                  << "data text not null"       // Changed data
+                  << "description text");       // Description of change
+
+            setVersion(3, "Added forgottent history id for profile & history for events");
         default:
             qDebug() << "Upgrade done";
     }
