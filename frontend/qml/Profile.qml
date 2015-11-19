@@ -60,6 +60,10 @@ Item {
         root.is_edit = ! root.is_edit
     }
 
+    function startSendMessage() {
+        console.log("New Message to: " + obj_data.id)
+    }
+
     Component.onCompleted: {
         // Set position of profile
         if( obj_data.pos ) {
@@ -127,6 +131,7 @@ Item {
             var point = Qt.point(mouse.x + root.x, mouse.y + root.y)
             var actions = [
                         { name: root.is_edit ? qsTr("Save") : qsTr("Edit"), color: "#faa", action: root.editSwitch },
+                        { name: qsTr("New Message"), color: "#aaa", action: root.sendMessage },
                         { name: qsTr("Zoom +"), color: "#faf", action: function(p){ A.sheetScaleTo(+1, p) }, property: point },
                         { name: qsTr("Zoom -"), color: "#ffa", action: function(p){ A.sheetScaleTo(-1, p) }, property: point }
                     ]

@@ -53,6 +53,8 @@ Rectangle {
         anchors.fill: parent
         pressDelay: 300
 
+        clip: true
+
         contentWidth: sheet.scaledWidth
         contentHeight: sheet.scaledHeight
 
