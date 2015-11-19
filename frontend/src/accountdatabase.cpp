@@ -1,7 +1,7 @@
 #include "accountdatabase.h"
 
 // Version
-#define DATABASE_VERSION 1
+#define DATABASE_VERSION 2
 // Backward-compatibility with all versions greater than
 #define DATABASE_MINIMAL_VERSION 0
 
@@ -215,7 +215,7 @@ void AccountDatabase::upgrade(const long from_version)
 
             table("storage_type", QStringList()
                   << "name text not null");     // Readable name of storage data type
-            query.exec("INSERT INTO media_type (name) VALUES ('image'), ('audio'), ('video'), ('file')");
+            query.exec("INSERT INTO storage_type (name) VALUES ('image'), ('audio'), ('video'), ('file')");
 
             table("storage_metadata", QStringList()
                   << "date integer not null"    // Last update date
@@ -228,8 +228,35 @@ void AccountDatabase::upgrade(const long from_version)
                   << "data blob not null");     // Private place for storage data, is managed by InternalStorage
 
             setVersion(1, "First version of database");
+        case 2:
+            table("event_type", QStringList()
+                  << "name text not null"       // Readable name of event type
+                  << "description text not null"); // Info about event type
+            query.exec("INSERT INTO event_type (name, description) VALUES "
+                       "('message', 'p2p messages'),"
+                       "('fact', 'some information')");
+
+            table("events", QStringList()
+                  << "date integer not null"    // Last update date
+                  << "occur integer not null"   // Date when event occur/occurred
+                  << "link integer"             // Link to another event id
+                  << "type int not null"        // Type of event
+                  << "owner int not null"       // Profile owns event
+                  << "recipient int"            // Recipient of the event
+                  << "data text not null");     // Json with event data
+
+            query.exec("DROP TABLE storage_type");
+            table("storage_type", QStringList()
+                  << "name text not null"       // Readable name of storage data type
+                  << "description text not null"); // Info about storage type
+            query.exec("INSERT INTO storage_type (name, description) VALUES "
+                       "('image', 'Static graphical data like jpeg, png, svg etc. - just a picture'),"
+                       "('media', 'Any audio or video media data like mp3, mkv, apng etc. - moving picture w/wo audio'),"
+                       "('3d', 'Mesh, textures and animation data like stl, obj etc.'),"
+                       "('file', 'Just an unknown binary file like bin, zip, tar.gz etc.')");
+
+            setVersion(2, "Added events table to separate events and profile data");
         default:
             qDebug() << "Upgrade done";
     }
 }
-
