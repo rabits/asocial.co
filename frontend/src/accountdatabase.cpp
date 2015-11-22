@@ -42,7 +42,7 @@ void AccountDatabase::open(const QString &password)
     }
 }
 
-int AccountDatabase::createProfile(const QJsonObject &profile)
+qint64 AccountDatabase::createProfile(const QJsonObject &profile)
 {
     qDebug("Creating new profile");
 
@@ -57,10 +57,10 @@ int AccountDatabase::createProfile(const QJsonObject &profile)
     if( ! query.exec() )
         qCritical() << query.lastError();
 
-    return query.lastInsertId().toInt();
+    return query.lastInsertId().toLongLong();
 }
 
-QJsonObject AccountDatabase::getProfile(const int id)
+QJsonObject AccountDatabase::getProfile(const qint64 id)
 {
     qDebug("Getting profile");
 
@@ -68,7 +68,7 @@ QJsonObject AccountDatabase::getProfile(const int id)
     QJsonObject out;
 
     query.prepare("SELECT rowid, date, address, data, overlay, description FROM profiles WHERE rowid = :id LIMIT 1");
-    query.bindValue(":id", id);
+    query.bindValue(":id", QVariant::fromValue(id));
 
     if( ! query.exec() ) {
         qCritical() << query.lastError();
@@ -105,7 +105,7 @@ bool AccountDatabase::updateProfileData(const QJsonObject &profile)
     return true;
 }
 
-int AccountDatabase::createEvent(const QJsonObject &event)
+qint64 AccountDatabase::createEvent(const QJsonObject &event)
 {
     qDebug("Creating new event");
 
@@ -126,14 +126,14 @@ int AccountDatabase::createEvent(const QJsonObject &event)
         if( ! query.exec() )
             qCritical() << query.lastError();
 
-        return query.lastInsertId().toInt();
+        return query.lastInsertId().toLongLong();
     }
 
     qWarning() << "Event type" << event.value("type").toString() << "not found";
     return -1;
 }
 
-QJsonObject AccountDatabase::getEvent(const int id)
+QJsonObject AccountDatabase::getEvent(const qint64 id)
 {
     qDebug("Getting event");
 
@@ -141,7 +141,7 @@ QJsonObject AccountDatabase::getEvent(const int id)
     QJsonObject out;
 
     query.prepare("SELECT rowid, date, occur, link, type, owner, recipient, data, overlay FROM events WHERE rowid = :id LIMIT 1");
-    query.bindValue(":id", id);
+    query.bindValue(":id", QVariant::fromValue(id));
 
     if( ! query.exec() )
         qCritical() << query.lastError();
@@ -160,15 +160,32 @@ QJsonObject AccountDatabase::getEvent(const int id)
     return out;
 }
 
-QJsonArray AccountDatabase::getEvents(const int type)
+QJsonArray AccountDatabase::getEvents(const qint64 occur_from, const qint64 occur_to, const int type, const qint64 owner, const qint64 recipient)
 {
     qDebug("Getting events");
     QJsonArray out;
 
+    QString query_string = "SELECT rowid, date, occur, link, type, owner, recipient, data, overlay FROM events WHERE occur >= :from AND occur <= :to";
     QSqlQuery query(m_db);
 
-    query.prepare("SELECT rowid, date, occur, link, type, owner, recipient, data, overlay FROM events WHERE type = :type");
-    query.bindValue(":type", type);
+    if( type > -1 )
+        query_string.append(" AND type = :type");
+    if( owner > -1 )
+        query_string.append(" AND owner = :owner");
+    if( recipient > -1 )
+        query_string.append(" AND recipient = :recipient");
+
+    query.prepare(query_string);
+
+    if( type > -1 )
+        query.bindValue(":type", type);
+    if( owner > -1 )
+        query.bindValue(":owner", QVariant::fromValue(owner));
+    if( recipient > -1 )
+        query.bindValue(":recipient", QVariant::fromValue(recipient));
+
+    query.bindValue(":from", QVariant::fromValue(occur_from));
+    query.bindValue(":to", QVariant::fromValue(occur_to));
 
     if( ! query.exec() )
         qCritical() << query.lastError();

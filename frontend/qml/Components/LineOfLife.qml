@@ -44,15 +44,19 @@ Rectangle {
         L.updateAxis()
     }
 
-    function newEvent(unixtime) {
-        console.log("LineOfLife: Creating new event " + unixtime)
-        if( _profile_data.events === undefined )
-            _profile_data.events = {}
-        _profile_data.events[unixtime.toString()] = { text: "" }
+    function newEvent(occur) {
+        console.log("LineOfLife: Creating new event " + occur)
 
-        L.updateAxis()
+        //L.updateAxis()
 
-        A.showEvent(_profile_data.events, unixtime, _profile.saveObjData)
+        A.showEvent({ occur: occur,
+                      link: null,
+                      type: "fact",
+                      owner: _profile.id,
+                      recipient: null,
+                      data: {text: ""},
+                      overlay: {}
+                    }, A.saveEvent)
     }
 
     onWidthChanged: {

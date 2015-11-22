@@ -6,23 +6,21 @@ Item {
     visible: false
 
     property var _event
-    property var _unixtime
+    property var _occur
     property var _save_data_func
 
-    function show(events, unixtime, save_data_func) {
+    function show(event, save_data_func) {
         root.visible = true
 
-        _unixtime = unixtime
-        _event = events[_unixtime.toString()]
-
+        _event = event
         _save_data_func = save_data_func
 
-        editable_text.text = _event.text
+        editable_text.text = _event.data.text
     }
 
     function save() {
-        _event.text = editable_text.text
-        _save_data_func()
+        _event.data.text = editable_text.text
+        _save_data_func(_event)
         // TODO: event unixtime change
     }
 

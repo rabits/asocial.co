@@ -5,6 +5,8 @@ var _levels = [
      { seconds: 60*60*24*365, minwidth: 20 * screenScale, size: 0.80, format: "yyyy", }  // 3 year
 ]
 
+var _visible_events = {}
+
 var current_detail_level = _levels.length - 1
 
 function setAxisDetailLevel() {
@@ -51,11 +53,11 @@ function createDeathDayMark(unixtime) {
                 })
 }
 
-function createEventMark(unixtime) {
+function createEventMark(occur) {
     return event_mark.createObject(
                 events, {
-                    x: timeToPoint(unixtime),
-                    unixtime: unixtime,
+                    x: timeToPoint(occur),
+                    unixtime: occur,
                     color: "#0a0"
                 })
 }
@@ -96,8 +98,10 @@ function updateAxis() {
         createDeathDayMark(_profile_data.death_date)
 
     // Create profile events marks
-    for( var e in _profile_data.events ) {
-        createEventMark(parseInt(e))
+    var evs = A.getEvents(_visible_from, _visible_from + _visible_interval)
+    for( var e in evs ) {
+        console.log(e)
+        //createEventMark(parseInt(e))
     }
 }
 

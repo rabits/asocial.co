@@ -36,7 +36,7 @@ function emptyProfileData() {
     return {
         id: null,
         address: '',
-        data: {name: '', birth_date: null, death_date: null, avatar_url: '', avatar_url_eq: '', events: {}},
+        data: {name: '', birth_date: null, death_date: null, avatar_url: '', avatar_url_eq: ''},
         overlay: {},
         description: ''
     }
@@ -52,6 +52,18 @@ function createProfile(obj_data) {
 
 function updateProfileData(profile) {
     return _db.updateProfileData(profile)
+}
+
+function getEvents(from, to, type, owner, recipient) {
+    if( type === undefined ) type = -1
+    if( owner === undefined ) owner = -1
+    if( recipient === undefined ) recipient = -1
+
+    return _db.getEvents(from, to, type, owner, recipient)
+}
+
+function getEventTypeId(name) {
+    return _db.getEventTypeId(name)
 }
 
 function createAddress() {
@@ -134,6 +146,14 @@ function sheetScaleTo(vector, point) {
  * Account show/edit event info
 **/
 
-function showEvent(events, unixtime, refresh_func) {
-    _se.show(events, unixtime, refresh_func)
+function showEvent(event, refresh_func) {
+    _se.show(event, refresh_func)
+}
+
+function saveEvent(event) {
+    console.log(JSON.stringify(event))
+    if( event.id === undefined )
+        _db.createEvent(event)
+    else
+        _db.updateEvent(event)
 }
