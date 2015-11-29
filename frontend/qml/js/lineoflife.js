@@ -6,6 +6,8 @@ var _levels = [
 ]
 
 var _visible_events = {}
+var _birth_event = null
+var _death_event = null
 
 var current_detail_level = _levels.length - 1
 
@@ -53,27 +55,32 @@ function createDeathDayMark(unixtime) {
                 })
 }
 
-function createEventMark(occur) {
+function createEventMark(data) {
     return event_mark.createObject(
                 events, {
-                    x: timeToPoint(occur),
-                    unixtime: occur,
+                    x: timeToPoint(data.occur),
+                    unixtime: data.occur,
                     color: "#0a0"
                 })
 }
 
-function clean() {
-    var i = 0
+function arrayNotIn(a, b) {
+    return a.filter(function(val) {
+        return b.indexOf(val) < 0
+    })
+}
 
-    for( i = events.children.length; i > 0 ; i-- )
-        events.children[i-1].destroy()
+function cleanEvents(toclean) {
+    for( var i in toclean ) {
+        console.debug("Destroying " + toclean[i])
+        _visible_events[toclean[i]].destroy()
+        delete _visible_events[toclean[i]]
+    }
 }
 
 function updateAxis() {
     if( lineoflife.visible === false )
         return
-
-    clean()
 
     var marks = wdate.getAxisMarks(current_detail_level, lineoflife._visible_from*1000, lineoflife._visible_interval*1000)
 
@@ -91,17 +98,44 @@ function updateAxis() {
     for( i = axis.children.length; i > marks.length ; i-- )
         axis.children[i-1].destroy()
 
-    // Creating birth/death marks
-    if( _profile_data.birth_date !== null )
-        createBirthDayMark(_profile_data.birth_date)
-    if( _profile_data.death_date !== null )
-        createDeathDayMark(_profile_data.death_date)
 
     // Create profile events marks
-    var evs = A.getEvents(_visible_from, _visible_from + _visible_interval)
-    for( var e in evs ) {
-        console.log(e)
-        //createEventMark(parseInt(e))
+    var events_ids = A.findEvents(_visible_from, _visible_from + _visible_interval)
+
+    // Clean & update all events not in found events
+    var events_exists = Object.keys(_visible_events).map(function(val) { return parseInt(val) })
+    cleanEvents(arrayNotIn(events_exists, events_ids))
+    for( var e in _visible_events )
+        _visible_events[e].updatePos()
+
+    // Get all not existed events from the db
+    events_exists = Object.keys(_visible_events).map(function(val) { return parseInt(val) })
+    var new_ids = arrayNotIn(events_ids, events_exists)
+    if( new_ids.length > 0 ) {
+        var new_events = A.getEvents(new_ids)
+        for( var n in new_events )
+            _visible_events[new_events[n].id] = createEventMark(new_events[n])
+    }
+
+
+    // Creating birth/death marks
+    if( _profile_data.birth_date !== null ) {
+        if( _birth_event !== null )
+            _birth_event.updatePos()
+        else
+            _birth_event = createBirthDayMark(_profile_data.birth_date)
+    } else if( _death_event !== null ) {
+        _birth_event.destroy()
+        _birth_event = null
+    }
+    if( _profile_data.death_date !== null ) {
+        if( _death_event !== null )
+            _death_event.updatePos()
+        else
+            _death_event = createBirthDayMark(_profile_data.death_date)
+    } else if( _death_event !== null ) {
+        _death_event.destroy()
+        _death_event = null
     }
 }
 

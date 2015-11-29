@@ -23,8 +23,8 @@ public:
     Q_INVOKABLE bool updateProfileData(const QJsonObject &profile);
 
     Q_INVOKABLE qint64 createEvent(const QJsonObject &event);
-    Q_INVOKABLE QJsonObject getEvent(const qint64 id);
-    Q_INVOKABLE QJsonArray getEvents(const qint64 occur_from, const qint64 occur_to, const int type = -1, const qint64 owner = -1, const qint64 recipient = -1);
+    Q_INVOKABLE QJsonArray getEvents(const QJsonArray ids);
+    Q_INVOKABLE QJsonArray findEvents(const qint64 occur_from, const qint64 occur_to, const int type = -1, const qint64 owner = -1, const qint64 recipient = -1);
     Q_INVOKABLE bool updateEvent(const QJsonObject &event);
 
     Q_INVOKABLE QString getEventTypeName(const int id);

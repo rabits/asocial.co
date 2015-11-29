@@ -54,12 +54,16 @@ function updateProfileData(profile) {
     return _db.updateProfileData(profile)
 }
 
-function getEvents(from, to, type, owner, recipient) {
+function getEvents(ids) {
+    return _db.getEvents(ids)
+}
+
+function findEvents(from, to, type, owner, recipient) {
     if( type === undefined ) type = -1
     if( owner === undefined ) owner = -1
     if( recipient === undefined ) recipient = -1
 
-    return _db.getEvents(from, to, type, owner, recipient)
+    return _db.findEvents(from, to, type, owner, recipient)
 }
 
 function getEventTypeId(name) {

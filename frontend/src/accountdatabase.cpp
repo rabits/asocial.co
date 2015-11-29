@@ -133,39 +133,45 @@ qint64 AccountDatabase::createEvent(const QJsonObject &event)
     return -1;
 }
 
-QJsonObject AccountDatabase::getEvent(const qint64 id)
+QJsonArray AccountDatabase::getEvents(const QJsonArray ids)
 {
-    qDebug("Getting event");
+    qDebug("Getting events");
 
     QSqlQuery query(m_db);
-    QJsonObject out;
+    QJsonArray out;
 
-    query.prepare("SELECT rowid, date, occur, link, type, owner, recipient, data, overlay FROM events WHERE rowid = :id LIMIT 1");
-    query.bindValue(":id", QVariant::fromValue(id));
+    QStringList ids_str;
+    foreach(QJsonValue id, ids) {
+        ids_str << QString::number(id.toVariant().toLongLong());
+    }
 
-    if( ! query.exec() )
-        qCritical() << query.lastError();
-    else if( query.next() ) {
-        out["id"] = query.value("rowid").toInt();
-        out["date"] = query.value("date").toLongLong();
-        out["occur"] = query.value("occur").toLongLong();
-        out["type"] = getEventTypeName(query.value("type").toInt());
-        out["owner"] = query.value("owner").toLongLong();
-        out["recipient"] = query.value("recipient").toLongLong();
-        out["data"] = QJsonDocument::fromJson(query.value("data").toByteArray()).object();
-        out["overlay"] = QJsonDocument::fromJson(query.value("overlay").toByteArray()).object();
+    if( query.exec(QString("SELECT rowid, date, occur, link, type, owner, recipient, data, overlay FROM events WHERE rowid IN (%1)").arg(ids_str.join(','))) ) {
+        while( query.next() ) {
+            QJsonObject obj;
+
+            obj["id"] = query.value("rowid").toInt();
+            obj["date"] = query.value("date").toLongLong();
+            obj["occur"] = query.value("occur").toLongLong();
+            obj["type"] = getEventTypeName(query.value("type").toInt());
+            obj["owner"] = query.value("owner").toLongLong();
+            obj["recipient"] = query.value("recipient").toLongLong();
+            obj["data"] = QJsonDocument::fromJson(query.value("data").toByteArray()).object();
+            obj["overlay"] = QJsonDocument::fromJson(query.value("overlay").toByteArray()).object();
+
+            out.append(obj);
+        }
     } else
-        qWarning() << "Unable to find required profile id#" << id;
+        qCritical() << query.lastError();
 
     return out;
 }
 
-QJsonArray AccountDatabase::getEvents(const qint64 occur_from, const qint64 occur_to, const int type, const qint64 owner, const qint64 recipient)
+QJsonArray AccountDatabase::findEvents(const qint64 occur_from, const qint64 occur_to, const int type, const qint64 owner, const qint64 recipient)
 {
-    qDebug("Getting events");
+    qDebug("Finding events");
     QJsonArray out;
 
-    QString query_string = "SELECT rowid, date, occur, link, type, owner, recipient, data, overlay FROM events WHERE occur >= :from AND occur <= :to";
+    QString query_string = "SELECT rowid FROM events WHERE occur >= :from AND occur <= :to";
     QSqlQuery query(m_db);
 
     if( type > -1 )
@@ -187,24 +193,12 @@ QJsonArray AccountDatabase::getEvents(const qint64 occur_from, const qint64 occu
     query.bindValue(":from", QVariant::fromValue(occur_from));
     query.bindValue(":to", QVariant::fromValue(occur_to));
 
-    if( ! query.exec() )
-        qCritical() << query.lastError();
-    else {
+    if( query.exec() ) {
         while( query.next() ) {
-            QJsonObject obj;
-
-            obj["id"] = query.value("rowid").toInt();
-            obj["date"] = query.value("date").toLongLong();
-            obj["occur"] = query.value("occur").toLongLong();
-            obj["type"] = getEventTypeName(query.value("type").toInt());
-            obj["owner"] = query.value("owner").toLongLong();
-            obj["recipient"] = query.value("recipient").toLongLong();
-            obj["data"] = QJsonDocument::fromJson(query.value("data").toByteArray()).object();
-            obj["overlay"] = QJsonDocument::fromJson(query.value("overlay").toByteArray()).object();
-
-            out.append(obj);
+            out.append(query.value("rowid").toLongLong());
         }
-    }
+    } else
+        qCritical() << query.lastError();
 
     return out;
 }

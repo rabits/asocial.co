@@ -2,6 +2,8 @@ import QtQuick 2.4
 import QtGraphicalEffects 1.0
 import co.asocial 1.0
 
+import "../../js/lineoflife.js" as L
+
 Rectangle {
     id: root
 
@@ -13,6 +15,10 @@ Rectangle {
     property string format: "dd/MM/yyyy"
     property var unixtime
     property color textColor: app.getTextColor(color)
+
+    function updatePos() {
+        root.x = L.timeToPoint(unixtime)
+    }
 
     Rectangle {
         id: text_background
