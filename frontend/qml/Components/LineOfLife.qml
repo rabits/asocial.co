@@ -188,7 +188,17 @@ Rectangle {
                                 { name: qsTr("Zoom +"), color: "#faf", action: content.zoomIn, property: axis_cursor.unixtime },
                                 { name: qsTr("Zoom -"), color: "#ffa", action: content.zoomOut }
                             ]
-                    // TODO: Collect near events to show & edit
+
+                    // Get first 10 events and show in menu
+                    var near_events = A.findEvents(L.pointToTime(mouse.x-2), L.pointToTime(mouse.x+2), 2, -1, -1, 10)
+                    if( near_events.length > 0 ) {
+                        near_events = A.getEvents(near_events)
+                        for( var i in near_events ) {
+                            var e = near_events[i]
+                            actions.push({ name: e.occur, color: "#aaa", action: function(id) { A.showEvent(A.getEvents([id])[0], A.saveEvent) }, property: e.id })
+                            L.selectEvent(e.id)
+                        }
+                    }
 
                     drag.target = U.actionMenuShow(point, actions)
                 }
@@ -198,26 +208,6 @@ Rectangle {
 
                     U.actionMenuHide()
                     drag.target = null
-
-                    /*if( U.actionDelayedStop() ) {
-                        // Find closer event and show it
-                        var chosen_event = null
-                        var mindx = null
-                        for( var i in events.children ) {
-                            var e = events.children[i]
-                            var dx = Math.abs(mouse.x - e.x)
-                            if( chosen_event === null || mindx > dx ) {
-                                chosen_event = e
-                                mindx = dx
-                            }
-                        }
-                        if( chosen_event !== null && mindx <= 10 * screenScale ) {
-                            if( chosen_event.focus )
-                                A.showEvent(_profile_data.events, chosen_event.unixtime, _profile.saveObjData)
-
-                            chosen_event.focus = true
-                        }
-                    }*/
                 }
 
                 onPositionChanged: {

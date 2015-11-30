@@ -58,10 +58,11 @@ function getEvents(ids) {
     return _db.getEvents(ids)
 }
 
-function findEvents(from, to, type, owner, recipient) {
+function findEvents(from, to, type, owner, recipient, limit) {
     if( type === undefined ) type = -1
     if( owner === undefined ) owner = -1
     if( recipient === undefined ) recipient = -1
+    if( limit === undefined ) limit = -1
 
     return _db.findEvents(from, to, type, owner, recipient)
 }

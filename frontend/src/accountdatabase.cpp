@@ -166,7 +166,7 @@ QJsonArray AccountDatabase::getEvents(const QJsonArray ids)
     return out;
 }
 
-QJsonArray AccountDatabase::findEvents(const qint64 occur_from, const qint64 occur_to, const int type, const qint64 owner, const qint64 recipient)
+QJsonArray AccountDatabase::findEvents(const qint64 occur_from, const qint64 occur_to, const int type, const qint64 owner, const qint64 recipient, const qint16 limit)
 {
     qDebug("Finding events");
     QJsonArray out;
@@ -180,8 +180,13 @@ QJsonArray AccountDatabase::findEvents(const qint64 occur_from, const qint64 occ
         query_string.append(" AND owner = :owner");
     if( recipient > -1 )
         query_string.append(" AND recipient = :recipient");
+    if( limit > -1 )
+        query_string.append(" LIMIT :limit");
 
     query.prepare(query_string);
+
+    query.bindValue(":from", QVariant::fromValue(occur_from));
+    query.bindValue(":to", QVariant::fromValue(occur_to));
 
     if( type > -1 )
         query.bindValue(":type", type);
@@ -189,9 +194,8 @@ QJsonArray AccountDatabase::findEvents(const qint64 occur_from, const qint64 occ
         query.bindValue(":owner", QVariant::fromValue(owner));
     if( recipient > -1 )
         query.bindValue(":recipient", QVariant::fromValue(recipient));
-
-    query.bindValue(":from", QVariant::fromValue(occur_from));
-    query.bindValue(":to", QVariant::fromValue(occur_to));
+    if( limit > -1 )
+        query.bindValue(":limit", QVariant::fromValue(limit));
 
     if( query.exec() ) {
         while( query.next() ) {

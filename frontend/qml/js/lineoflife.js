@@ -100,7 +100,7 @@ function updateAxis() {
 
 
     // Create profile events marks
-    var events_ids = A.findEvents(_visible_from, _visible_from + _visible_interval)
+    var events_ids = A.findEvents(_visible_from, _visible_from + _visible_interval, 2)
 
     // Clean & update all events not in found events
     var events_exists = Object.keys(_visible_events).map(function(val) { return parseInt(val) })
@@ -138,6 +138,12 @@ function updateAxis() {
         _death_event = null
     }
 }
+
+function selectEvent(id) {
+    if( _visible_events.hasOwnProperty(id) )
+        _visible_events[id].focus = true
+}
+
 
 function pointToTime(point) {
     return Math.ceil((1.0 * point / axis_mouse_area.width) * lineoflife._visible_interval + lineoflife._visible_from)
