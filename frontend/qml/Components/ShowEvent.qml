@@ -20,12 +20,14 @@ Item {
 
     function save() {
         _event.data.text = editable_text.text
-        _save_data_func(_event)
-        // TODO: event unixtime change
+
+        if( _event.id === undefined )
+            _event.id = _save_data_func(_event)
+        else
+            _save_data_func(_event)
     }
 
     function hide() {
-        root.save()
         root.visible = false
         _event = null
         editable_text.text = ""
@@ -38,9 +40,23 @@ Item {
     }
 
     Rectangle {
+        id: event_header
+        anchors {
+            top: parent.top
+            left: parent.left
+            right: parent.right
+            margins: 20 * screenScale
+        }
+        height: 50 * screenScale
+    }
+
+    Rectangle {
         id: show_text_background
         anchors {
-            fill: parent
+            top: event_header.bottom
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
             margins: 20 * screenScale
         }
         radius: 10 * screenScale

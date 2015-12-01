@@ -158,7 +158,7 @@ function showEvent(event, refresh_func) {
 function saveEvent(event) {
     console.log(JSON.stringify(event))
     if( event.id === undefined )
-        _db.createEvent(event)
+        return _db.createEvent(event)
     else
         _db.updateEvent(event)
 }

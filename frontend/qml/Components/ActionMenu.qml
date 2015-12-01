@@ -84,7 +84,6 @@ Rectangle {
         root.visible = true
         root.focus = true
 
-        pathview.model = 0
         pathview.model = _actions.length
 
         if( parts_count > 1 )
@@ -97,6 +96,7 @@ Rectangle {
     function hide() {
         dragitem.dragActive = false
         root.visible = false
+        pathview.model = 0
     }
 
     PathView {

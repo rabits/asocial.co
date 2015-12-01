@@ -92,7 +92,7 @@ bool AccountDatabase::updateProfileData(const QJsonObject &profile)
     QSqlQuery query(m_db);
 
     query.prepare("UPDATE profiles SET date = :date, data = :data, overlay = :overlay WHERE rowid = :id");
-    query.bindValue(":id", profile.value("id").toInt());
+    query.bindValue(":id", profile.value("id").toVariant().toLongLong());
     query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
     query.bindValue(":data", QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact));
     query.bindValue(":overlay", QJsonDocument(profile.value("overlay").toObject()).toJson(QJsonDocument::Compact));
@@ -214,7 +214,7 @@ bool AccountDatabase::updateEvent(const QJsonObject &event)
     QSqlQuery query(m_db);
 
     query.prepare("UPDATE events SET date = :date, occur = :occur, data = :data, overlay = :overlay WHERE rowid = :id");
-    query.bindValue(":id", event.value("id").toInt());
+    query.bindValue(":id", event.value("id").toVariant().toLongLong());
     query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
     query.bindValue(":occur", event.value("occur").toVariant().toLongLong());
     query.bindValue(":data", QJsonDocument(event.value("data").toObject()).toJson(QJsonDocument::Compact));

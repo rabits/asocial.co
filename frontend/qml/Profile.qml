@@ -60,8 +60,16 @@ Item {
         root.is_edit = ! root.is_edit
     }
 
-    function startSendMessage() {
-        console.log("New Message to: " + obj_data.id)
+    function createNewMessage() {
+        console.log("New Message for: " + obj_data.id)
+        A.showEvent({ occur: wdate.currentUnixtime(),
+                      link: null,
+                      type: "message",
+                      owner: A.masterProfile().obj_data.id,
+                      recipient: obj_data.id,
+                      data: {text: ""},
+                      overlay: {}
+                    }, A.saveEvent)
     }
 
     Component.onCompleted: {
@@ -131,7 +139,7 @@ Item {
             var point = Qt.point(mouse.x + root.x, mouse.y + root.y)
             var actions = [
                         { name: root.is_edit ? qsTr("Save") : qsTr("Edit"), color: "#faa", action: root.editSwitch },
-                        { name: qsTr("New Message"), color: "#aaa", action: root.sendMessage },
+                        { name: qsTr("New Message"), color: "#aaa", action: root.createNewMessage },
                         { name: qsTr("Zoom +"), color: "#faf", action: function(p){ A.sheetScaleTo(+1, p) }, property: point },
                         { name: qsTr("Zoom -"), color: "#ffa", action: function(p){ A.sheetScaleTo(-1, p) }, property: point }
                     ]
