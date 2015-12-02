@@ -14,9 +14,10 @@ public:
     ~SqlDatabase();
 
     void open(const QString &password = "");
-    void table(const QString &name, const QStringList &fields);
+    bool table(const QString &name, const QStringList &fields);
 
-    void backup(); // Database backup
+    bool backup(); // Database backup
+    bool restore(); // DB backup restore (in case of upgrade fails)
 
     QString dumpSchema(); // Database dump schema
     QString dumpData(); // Database dump data
