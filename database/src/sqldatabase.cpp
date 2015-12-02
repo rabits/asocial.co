@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QtSql/QSqlQuery>
+#include <QtSql/QSqlRecord>
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlDriver>
 
@@ -44,6 +45,10 @@ void SqlDatabase::open(const QString &password)
         qCritical() << m_db.lastError();
         qFatal("Unable to open sql database");
     }
+
+    // DEBUG dump scheme
+    qDebug() << dumpSchema();
+    qDebug() << dumpData();
 }
 
 void SqlDatabase::table(const QString &name, const QStringList &fields)
@@ -52,7 +57,7 @@ void SqlDatabase::table(const QString &name, const QStringList &fields)
     QSqlQuery query(m_db);
 
     if( ! query.exec(QString("CREATE TABLE IF NOT EXISTS %1 (%2)").arg(m_db.driver()->escapeIdentifier(name, QSqlDriver::TableName), fields.join(','))) )
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << query.lastQuery() << query.lastError().text();
 }
 
 void SqlDatabase::backup()
@@ -82,4 +87,50 @@ void SqlDatabase::backup()
         qCritical() << m_db.lastError();
         qFatal("Unable to open sql database");
     }
+}
+
+QString SqlDatabase::dumpSchema()
+{
+    QString out;
+    QSqlQuery query(m_db);
+
+    QStringList tables = m_db.tables();
+    foreach( QString table, tables ) {
+        out += QString("Table: %1\n").arg(table);
+        if( ! query.exec(QString("PRAGMA table_info(\"%1\")").arg(table)) )
+            qCritical() << "DB query failed" << query.lastQuery() << query.lastError().text();
+        while( query.next() )
+            out += QString("  %1 %2 %3 %4\n").arg(query.value(0).toInt()).arg(query.value(1).toString()).arg(query.value(2).toInt()).arg(query.value(3).toInt());
+    }
+
+    return out;
+}
+
+QString SqlDatabase::dumpData()
+{
+    QString out;
+    QSqlQuery query(m_db);
+
+    QStringList tables = m_db.tables();
+    foreach( QString table, tables ) {
+        out += QString("Table: %1\n").arg(table);
+        query.exec(QString("SELECT rowid, * FROM \"%1\"").arg(table));
+        while( query.next() ) {
+            int fields = query.record().count();
+            for( int i = 0; i < fields; i++ ) {
+                QVariant var = query.value(i);
+                if( var.isNull() )
+                    out += "\tNULL";
+                else if( var.type() == QVariant::String )
+                    out += QString("\t\"%1\"").arg(var.toString());
+                else if( var.type() == QVariant::ByteArray )
+                    out += QString("\t0x%1").arg(QString(var.toByteArray().toHex()));
+                else
+                    out += QString("\t%1").arg(var.toString());
+            }
+            out += "\n";
+        }
+    }
+
+    return out;
 }

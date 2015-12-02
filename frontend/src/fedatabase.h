@@ -28,13 +28,13 @@ public:
     AccountDatabase* getCurrentAccount();
 
 private:
-    long version();
-    void setVersion(const long version, const QString &description);
-    void upgrade(const long from_version);
+    qint16 version();
+    void setVersion(const qint16 version, const QString &description);
+    void upgrade(const qint16 from_version);
 
     PrivKey* getAccountPassKey(const int id);
 
-    long m_version; // Current database version
+    qint16 m_version; // Current database version
 
     AccountDatabase* m_active_account;
 };

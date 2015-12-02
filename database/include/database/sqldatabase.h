@@ -18,6 +18,9 @@ public:
 
     void backup(); // Database backup
 
+    QString dumpSchema(); // Database dump schema
+    QString dumpData(); // Database dump data
+
 protected:
     QString m_name;
     QString m_path;

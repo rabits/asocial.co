@@ -190,7 +190,7 @@ Rectangle {
                             ]
 
                     // Get first 10 events and show in menu
-                    var near_events = A.findEvents(L.pointToTime(mouse.x-2), L.pointToTime(mouse.x+2), 2, -1, -1, 10)
+                    var near_events = A.findEvents(L.pointToTime(mouse.x-2), L.pointToTime(mouse.x+2), A.getTypeId("fact"), -1, -1, 10)
                     if( near_events.length > 0 ) {
                         near_events = A.getEvents(near_events)
                         for( var i in near_events ) {

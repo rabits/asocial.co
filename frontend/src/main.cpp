@@ -30,10 +30,10 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &, const QString &
             printLogMessage(5, QString("[aSocial] Warning: %1\n").arg(msg));
             break;
         case QtCriticalMsg:
-            printLogMessage(6, QString("[aSocial] Critical: %s\n").arg(msg));
+            printLogMessage(6, QString("[aSocial] Critical: %1\n").arg(msg));
             break;
         case QtFatalMsg:
-            printLogMessage(7, QString("[aSocial] Fatal: %s\n").arg(msg));
+            printLogMessage(7, QString("[aSocial] Fatal: %1\n").arg(msg));
             Frontend::destroyI();
             abort();
     }

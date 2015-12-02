@@ -27,20 +27,20 @@ public:
     Q_INVOKABLE QJsonArray findEvents(const qint64 occur_from, const qint64 occur_to, const int type = -1, const qint64 owner = -1, const qint64 recipient = -1, const qint16 limit = -1);
     Q_INVOKABLE bool updateEvent(const QJsonObject &event);
 
-    Q_INVOKABLE QString getEventTypeName(const int id);
-    Q_INVOKABLE int getEventTypeId(const QString &name);
-    Q_INVOKABLE QJsonArray getEventTypes();
+    Q_INVOKABLE QString getTypeName(const qint16 id);
+    Q_INVOKABLE qint16 getTypeId(const QString &name);
+    Q_INVOKABLE QJsonArray getTypes(const qint16 parent_id = -1);
 
     Q_INVOKABLE QString createAddress();
 
-    Q_INVOKABLE int storeKey(const PrivKey* key, const QString description);
+    Q_INVOKABLE qint64 storeKey(const PrivKey* key, const QString description);
 
 private:
-    long version();
-    void setVersion(const long version, const QString &description);
-    void upgrade(const long from_version);
+    qint16 version();
+    void setVersion(const qint16 version, const QString &description);
+    void upgrade(const qint16 from_version);
 
-    long m_version; // Current database version
+    qint16 m_version; // Current database version
 };
 
 #endif // ACCOUNTDATABASE_H

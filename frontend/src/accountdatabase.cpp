@@ -1,7 +1,7 @@
 #include "accountdatabase.h"
 
 // Version
-#define DATABASE_VERSION 3
+#define DATABASE_VERSION 5
 // Backward-compatibility with all versions greater than
 #define DATABASE_MINIMAL_VERSION 0
 
@@ -50,12 +50,12 @@ qint64 AccountDatabase::createProfile(const QJsonObject &profile)
     query.prepare("INSERT INTO profiles (date, address, data, overlay, description) VALUES (:date, :address, :data, :overlay, :description)");
     query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
     query.bindValue(":address", profile.value("address").toString());
-    query.bindValue(":data", QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact));
-    query.bindValue(":overlay", QJsonDocument(profile.value("overlay").toObject()).toJson(QJsonDocument::Compact));
+    query.bindValue(":data", QString(QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact)));
+    query.bindValue(":overlay", QString(QJsonDocument(profile.value("overlay").toObject()).toJson(QJsonDocument::Compact)));
     query.bindValue(":description", profile.value("description").toString());
 
     if( ! query.exec() )
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     return query.lastInsertId().toLongLong();
 }
@@ -71,7 +71,7 @@ QJsonObject AccountDatabase::getProfile(const qint64 id)
     query.bindValue(":id", QVariant::fromValue(id));
 
     if( ! query.exec() ) {
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
     } else if( query.next() ) {
         out["id"] = query.value("rowid").toLongLong();
         out["date"] = query.value("date").toLongLong();
@@ -94,11 +94,11 @@ bool AccountDatabase::updateProfileData(const QJsonObject &profile)
     query.prepare("UPDATE profiles SET date = :date, data = :data, overlay = :overlay WHERE rowid = :id");
     query.bindValue(":id", profile.value("id").toVariant().toLongLong());
     query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
-    query.bindValue(":data", QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact));
-    query.bindValue(":overlay", QJsonDocument(profile.value("overlay").toObject()).toJson(QJsonDocument::Compact));
+    query.bindValue(":data", QString(QJsonDocument(profile.value("data").toObject()).toJson(QJsonDocument::Compact)));
+    query.bindValue(":overlay", QString(QJsonDocument(profile.value("overlay").toObject()).toJson(QJsonDocument::Compact)));
 
     if( ! query.exec() ) {
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
         return false;
     }
 
@@ -109,7 +109,7 @@ qint64 AccountDatabase::createEvent(const QJsonObject &event)
 {
     qDebug("Creating new event");
 
-    int type = getEventTypeId(event.value("type").toString());
+    int type = getTypeId(event.value("type").toString());
 
     if( type != -1 ) {
         QSqlQuery query(m_db);
@@ -120,11 +120,11 @@ qint64 AccountDatabase::createEvent(const QJsonObject &event)
         query.bindValue(":type", type);
         query.bindValue(":owner", event.value("owner").toVariant().toLongLong());
         query.bindValue(":recipient", event.value("recipient").toVariant().toLongLong());
-        query.bindValue(":data", QJsonDocument(event.value("data").toObject()).toJson(QJsonDocument::Compact));
-        query.bindValue(":overlay", QJsonDocument(event.value("overlay").toObject()).toJson(QJsonDocument::Compact));
+        query.bindValue(":data", QString(QJsonDocument(event.value("data").toObject()).toJson(QJsonDocument::Compact)));
+        query.bindValue(":overlay", QString(QJsonDocument(event.value("overlay").toObject()).toJson(QJsonDocument::Compact)));
 
         if( ! query.exec() )
-            qCritical() << query.lastError();
+            qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
         return query.lastInsertId().toLongLong();
     }
@@ -152,7 +152,7 @@ QJsonArray AccountDatabase::getEvents(const QJsonArray ids)
             obj["id"] = query.value("rowid").toInt();
             obj["date"] = query.value("date").toLongLong();
             obj["occur"] = query.value("occur").toLongLong();
-            obj["type"] = getEventTypeName(query.value("type").toInt());
+            obj["type"] = getTypeName(query.value("type").toInt());
             obj["owner"] = query.value("owner").toLongLong();
             obj["recipient"] = query.value("recipient").toLongLong();
             obj["data"] = QJsonDocument::fromJson(query.value("data").toByteArray()).object();
@@ -161,7 +161,7 @@ QJsonArray AccountDatabase::getEvents(const QJsonArray ids)
             out.append(obj);
         }
     } else
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     return out;
 }
@@ -202,7 +202,7 @@ QJsonArray AccountDatabase::findEvents(const qint64 occur_from, const qint64 occ
             out.append(query.value("rowid").toLongLong());
         }
     } else
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     return out;
 }
@@ -217,25 +217,25 @@ bool AccountDatabase::updateEvent(const QJsonObject &event)
     query.bindValue(":id", event.value("id").toVariant().toLongLong());
     query.bindValue(":date", QDateTime::currentDateTime().toTime_t());
     query.bindValue(":occur", event.value("occur").toVariant().toLongLong());
-    query.bindValue(":data", QJsonDocument(event.value("data").toObject()).toJson(QJsonDocument::Compact));
-    query.bindValue(":overlay", QJsonDocument(event.value("overlay").toObject()).toJson(QJsonDocument::Compact));
+    query.bindValue(":data", QString(QJsonDocument(event.value("data").toObject()).toJson(QJsonDocument::Compact)));
+    query.bindValue(":overlay", QString(QJsonDocument(event.value("overlay").toObject()).toJson(QJsonDocument::Compact)));
 
     if( ! query.exec() ) {
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
         return false;
     }
 
     return true;
 }
 
-QString AccountDatabase::getEventTypeName(const int id)
+QString AccountDatabase::getTypeName(const qint16 id)
 {
     QSqlQuery query(m_db);
-    query.prepare("SELECT name FROM event_type WHERE rowid = :id LIMIT 1");
+    query.prepare("SELECT name FROM types WHERE rowid = :id LIMIT 1");
     query.bindValue(":id", id);
 
     if( ! query.exec() )
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     query.next();
     if( ! query.isNull(0) )
@@ -245,43 +245,50 @@ QString AccountDatabase::getEventTypeName(const int id)
     return "";
 }
 
-int AccountDatabase::getEventTypeId(const QString &name)
+qint16 AccountDatabase::getTypeId(const QString &name)
 {
     QSqlQuery query(m_db);
-    query.prepare("SELECT rowid FROM event_type WHERE name = :name LIMIT 1");
+    query.prepare("SELECT rowid FROM types WHERE name = :name LIMIT 1");
     query.bindValue(":name", name);
 
     if( ! query.exec() )
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
-    query.next();
-    if( ! query.isNull(0) )
+    if( ! query.next() && query.isNull(0) )
         return query.value(0).toInt();
 
-    // If not found
+    qWarning() << "Type" << name << "not found";
     return -1;
 }
 
-QJsonArray AccountDatabase::getEventTypes()
+QJsonArray AccountDatabase::getTypes(const qint16 parent_id)
 {
     qDebug("Getting event types");
     QJsonArray out;
 
     QSqlQuery query(m_db);
+    QString query_string = "SELECT rowid, parent, name, description FROM types";
+    if( parent_id > -1 )
+        query_string.append(" WHERE parent = :parent");
 
-    if( ! query.exec("SELECT rowid, name, description FROM event_types") )
-        qCritical() << query.lastError();
-    else {
+    query.prepare(query_string);
+
+    if( parent_id > -1 )
+        query.bindValue(":parent", parent_id);
+
+    if( query.exec() ) {
         while( query.next() ) {
             QJsonObject obj;
 
             obj["id"] = query.value("rowid").toInt();
-            obj["date"] = query.value("name").toString();
-            obj["occur"] = query.value("description").toString();
+            obj["parent"] = query.value("parent").toInt();
+            obj["name"] = query.value("name").toString();
+            obj["description"] = query.value("description").toString();
 
             out.append(obj);
         }
-    }
+    } else
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     return out;
 }
@@ -298,7 +305,7 @@ QString AccountDatabase::createAddress()
     return address;
 }
 
-int AccountDatabase::storeKey(const PrivKey *key, const QString description)
+qint64 AccountDatabase::storeKey(const PrivKey *key, const QString description)
 {
     qDebug() << "Store address" << key->getPubKey()->getAddress();
 
@@ -311,12 +318,12 @@ int AccountDatabase::storeKey(const PrivKey *key, const QString description)
     query.bindValue(":description", description);
 
     if( ! query.exec() )
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
-    return query.lastInsertId().toInt();
+    return query.lastInsertId().toLongLong();
 }
 
-long AccountDatabase::version()
+qint16 AccountDatabase::version()
 {
     if( m_version != -1 )
         return m_version;
@@ -333,7 +340,7 @@ long AccountDatabase::version()
 
     QSqlQuery query(m_db);
     if( ! query.exec("SELECT version FROM database ORDER BY rowid DESC LIMIT 1") )
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     query.next();
     if( ! query.isNull(0) )
@@ -342,9 +349,9 @@ long AccountDatabase::version()
     return m_version;
 }
 
-void AccountDatabase::setVersion(const long version, const QString &description)
+void AccountDatabase::setVersion(const qint16 version, const QString &description)
 {
-    qDebug() << "Set database version" << version;
+    qDebug() << "Set database version" << version << description;
 
     QSqlQuery query(m_db);
     query.prepare("INSERT INTO database (version, description) VALUES (:version, :description)");
@@ -352,16 +359,17 @@ void AccountDatabase::setVersion(const long version, const QString &description)
     query.bindValue(":description", description);
 
     if( ! query.exec() )
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << AccountDatabase::version() << query.lastQuery() << query.lastError().text();
 
     m_version = version;
 }
 
-void AccountDatabase::upgrade(const long from_version)
+void AccountDatabase::upgrade(const qint16 from_version)
 {
     qDebug() << "Start database upgrade from version" << from_version;
 
     QSqlQuery query(m_db);
+    QSqlQuery migrate_query(m_db);
 
     // Changes in versions should be applied consistently
     switch( from_version + 1 ) {
@@ -407,6 +415,7 @@ void AccountDatabase::upgrade(const long from_version)
                   << "data blob not null");     // Private place for storage data, is managed by InternalStorage
 
             setVersion(1, "First version of database");
+
         case 2:
             table("event_type", QStringList()
                   << "name text not null"       // Readable name of event type
@@ -436,6 +445,7 @@ void AccountDatabase::upgrade(const long from_version)
                        "('file', 'Just an unknown binary file like bin, zip, tar.gz etc.')");
 
             setVersion(2, "Added events table to separate events and profile data");
+
         case 3:
             query.exec("DROP TABLE profiles_history");
             table("profiles_history", QStringList() // History of profiles
@@ -451,6 +461,56 @@ void AccountDatabase::upgrade(const long from_version)
                   << "description text");       // Description of change
 
             setVersion(3, "Added forgottent history id for profile & history for events");
+
+        case 4:
+            query.exec("DROP TABLE storage_type");
+            query.exec("DROP TABLE storage_metadata");
+            table("storage", QStringList()
+                  << "date int not null"        // Last update date
+                  << "type int not null"        // Type of media
+                  << "owner_id int not null"    // Data owner
+                  << "url text not null"        // URL to find media (internal encrypted storage_data, file or external url)
+                  << "data text not null");     // Json with metadata
+
+            table("types", QStringList()
+                  << "parent int"               // Type parent
+                  << "tablename text not null"  // Type table name
+                  << "name text not null"       // Readable name of event type
+                  << "description text not null"); // Info about event type
+
+            query.exec("INSERT INTO types (parent, tablename, name, description) VALUES "
+                       "(NULL, 'profiles', 'profile', 'Profile objects'),"
+                       "(NULL, 'events', 'event', 'Event objects'),"
+                       "(NULL, 'storage', 'event', 'Event objects'),"
+                       "(2, 'events', 'message', 'p2p messages'),"
+                       "(2, 'events', 'fact', 'some information'),"
+                       "(3, 'storage', 'image', 'Static graphical data like jpeg, png, svg etc. - just a picture'),"
+                       "(3, 'storage', 'media', 'Any audio or video media data like mp3, mkv, apng etc. - moving picture w/wo audio'),"
+                       "(3, 'storage', '3d', 'Mesh, textures and animation data like stl, obj etc.'),"
+                       "(3, 'storage', 'file', 'Just an unknown binary file like bin, zip, tar.gz etc.')");
+
+            setVersion(4, "Merged types into one table, moved storage_metadata into storage table, removed not required storage tables");
+
+        case 5:
+            if( query.exec("SELECT rowid, name FROM event_type") ) {
+                while( query.next() ) {
+                    migrate_query.prepare("UPDATE events SET type = (SELECT rowid FROM types WHERE name = :name) WHERE type = :id");
+                    migrate_query.bindValue(":id", query.value("rowid").toInt());
+                    migrate_query.bindValue(":name", query.value("name").toString());
+                    if( ! migrate_query.exec() ) {
+                        qCritical() << "DB query failed" << version() << migrate_query.lastQuery() << migrate_query.lastError().text();
+                        return;
+                    }
+                }
+            } else {
+                qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
+                return;
+            }
+
+            query.exec("DROP TABLE event_type");
+
+            setVersion(5, "Migrated event_type to types table by changing events table, removed event_type table");
+
         default:
             qDebug() << "Upgrade done";
     }

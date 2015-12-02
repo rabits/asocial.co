@@ -56,9 +56,7 @@ QJsonArray FEDatabase::getAccounts()
 
     QSqlQuery query(m_db);
     QJsonArray out;
-    if( ! query.exec("SELECT rowid, name, description FROM accounts ORDER BY rowid ASC") ) {
-        qCritical() << query.lastError();
-    } else {
+    if( query.exec("SELECT rowid, name, description FROM accounts ORDER BY rowid ASC") ) {
         while( query.next() ) {
             QJsonObject obj;
             obj["id"] = query.value("rowid").toInt();
@@ -66,7 +64,8 @@ QJsonArray FEDatabase::getAccounts()
             obj["description"] = query.value("description").toString();
             out.append(obj);
         }
-    }
+    } else
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     return out;
 }
@@ -89,7 +88,7 @@ int FEDatabase::createAccount(const QJsonObject &account, const QString &passwor
     query.bindValue(":passkey_encrypted", QVariant::fromValue(!password.isEmpty()));
 
     if( ! query.exec() )
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     // Create database for the new account, if it doesn't exists
     return query.lastInsertId().toInt();
@@ -145,19 +144,18 @@ PrivKey* FEDatabase::getAccountPassKey(const int id)
 
     PrivKey* passkey = new PrivKey(this);
 
-    if( ! query.exec(QString("SELECT passkey, passkey_encrypted FROM accounts WHERE rowid = %1 LIMIT 1").arg(id)) ) {
-        qCritical() << query.lastError();
-    } else {
+    if( query.exec(QString("SELECT passkey, passkey_encrypted FROM accounts WHERE rowid = %1 LIMIT 1").arg(id)) ) {
         if( query.next() ) {
             delete passkey;
             passkey = new PrivKey(this, query.value("passkey").toByteArray(), query.value("passkey_encrypted").toBool());
         }
-    }
+    } else
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     return passkey;
 }
 
-long FEDatabase::version()
+qint16 FEDatabase::version()
 {
     if( m_version != -1 )
         return m_version;
@@ -170,9 +168,7 @@ long FEDatabase::version()
           << "description text not null");
 
     QSqlQuery query(m_db);
-    if( ! query.exec("SELECT version FROM database ORDER BY rowid DESC LIMIT 1") ) {
-        qCritical() << query.lastError();
-    } else {
+    if( query.exec("SELECT version FROM database ORDER BY rowid DESC LIMIT 1") ) {
         query.next();
         if( ! query.isNull(0) ) {
             m_version = query.value(0).toLongLong();
@@ -180,12 +176,13 @@ long FEDatabase::version()
             // Database no version - it's empty
             m_version = 0;
         }
-    }
+    } else
+        qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
     return m_version;
 }
 
-void FEDatabase::setVersion(const long version, const QString &description)
+void FEDatabase::setVersion(const qint16 version, const QString &description)
 {
     qDebug() << "Set database version" << version;
 
@@ -195,12 +192,12 @@ void FEDatabase::setVersion(const long version, const QString &description)
     query.bindValue(":description", description);
 
     if( ! query.exec() )
-        qCritical() << query.lastError();
+        qCritical() << "DB query failed" << FEDatabase::version() << query.lastQuery() << query.lastError().text();
 
     m_version = version;
 }
 
-void FEDatabase::upgrade(const long from_version)
+void FEDatabase::upgrade(const qint16 from_version)
 {
     qDebug() << "Start database upgrade from version" << from_version;
 

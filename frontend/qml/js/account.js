@@ -67,8 +67,8 @@ function findEvents(from, to, type, owner, recipient, limit) {
     return _db.findEvents(from, to, type, owner, recipient)
 }
 
-function getEventTypeId(name) {
-    return _db.getEventTypeId(name)
+function getTypeId(name) {
+    return _db.getTypeId(name)
 }
 
 function createAddress() {

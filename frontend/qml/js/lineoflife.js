@@ -100,7 +100,8 @@ function updateAxis() {
 
 
     // Create profile events marks
-    var events_ids = A.findEvents(_visible_from, _visible_from + _visible_interval, 2)
+    // TODO: required optimization
+    var events_ids = A.findEvents(_visible_from, _visible_from + _visible_interval, A.getTypeId("fact"))
 
     // Clean & update all events not in found events
     var events_exists = Object.keys(_visible_events).map(function(val) { return parseInt(val) })
