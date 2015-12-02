@@ -1,7 +1,7 @@
 #include "accountdatabase.h"
 
 // Version
-#define DATABASE_VERSION 5
+#define DATABASE_VERSION 6
 // Backward-compatibility with all versions greater than
 #define DATABASE_MINIMAL_VERSION 0
 
@@ -254,7 +254,7 @@ qint16 AccountDatabase::getTypeId(const QString &name)
     if( ! query.exec() )
         qCritical() << "DB query failed" << version() << query.lastQuery() << query.lastError().text();
 
-    if( ! query.next() && query.isNull(0) )
+    if( query.next() && (! query.isNull(0)) )
         return query.value(0).toInt();
 
     qWarning() << "Type" << name << "not found";
@@ -510,6 +510,25 @@ void AccountDatabase::upgrade(const qint16 from_version)
             query.exec("DROP TABLE event_type");
 
             setVersion(5, "Migrated event_type to types table by changing events table, removed event_type table");
+
+        case 6:
+            table("signature", QStringList()
+                  << "id int not null"           // ID of signatured data
+                  << "type int not null"         // Type of signed object
+                  << "date int not null"         // Last update date
+                  << "data text not null");      // Signature json data
+
+            table("history", QStringList()
+                  << "id int not null"           // ID of signatured data
+                  << "type int not null"         // Type of history object
+                  << "date int not null"         // Last update date
+                  << "data text not null"        // Signature json data
+                  << "description text");        // Description of change
+
+            query.exec("DROP TABLE profiles_history");
+            query.exec("DROP TABLE events_history");
+
+            setVersion(6, "Added signature table & unificated history table");
 
         default:
             qDebug() << "Upgrade done";
